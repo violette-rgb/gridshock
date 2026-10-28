@@ -1,0 +1,62 @@
+{
+  "drone strike shuts nyhamna gas plant in norway for two weeks": {
+    "relevant": true,
+    "event_location": "Nyhamna, Norway",
+    "event_lat": 62.85,
+    "event_lon": 6.95,
+    "asset_id": "nyhamna",
+    "fuel": "gas",
+    "lost_fraction": 1.0,
+    "duration_days": 14,
+    "confidence": "high",
+    "summary": "A drone strike has caused a total shutdown of the Nyhamna gas processing plant for two weeks, significantly reducing gas supply to Great Britain."
+  },
+  "ship anchor cuts the ifa power cable to france for a month": {
+    "relevant": true,
+    "event_location": "English Channel",
+    "event_lat": 50.98,
+    "event_lon": 1.62,
+    "asset_id": "ifa",
+    "fuel": "power",
+    "lost_fraction": 1.0,
+    "duration_days": 30,
+    "confidence": "high",
+    "summary": "A ship anchor has severed the IFA power interconnector, eliminating one of the primary electricity exchange routes between Great Britain and France."
+  },
+  "china blockades the taiwan strait for 30 days": {
+    "relevant": true,
+    "event_location": "Taiwan Strait",
+    "event_lat": 24.0,
+    "event_lon": 119.5,
+    "asset_id": "taiwan_strait",
+    "fuel": "gas",
+    "lost_fraction": 0.2,
+    "duration_days": 30,
+    "confidence": "medium",
+    "summary": "A blockade of the Taiwan Strait disrupts global maritime trade routes, potentially delaying LNG shipments and increasing global energy price volatility."
+  },
+  "houthi missiles hit saudi arabia's ras tanura oil terminal": {
+    "relevant": true,
+    "event_location": "Ras Tanura, Saudi Arabia",
+    "event_lat": 26.64,
+    "event_lon": 50.16,
+    "asset_id": "ras_tanura",
+    "fuel": "oil",
+    "lost_fraction": 0.5,
+    "duration_days": 30,
+    "confidence": "medium",
+    "summary": "A missile strike on the Ras Tanura terminal causes a significant disruption to global oil supplies, driving up energy prices in Great Britain."
+  },
+  "drone attack on langeled": {
+    "relevant": true,
+    "event_location": "Langeled Pipeline, Norway",
+    "event_lat": 58.6,
+    "event_lon": 2.4,
+    "asset_id": "norway_pipelines",
+    "fuel": "gas",
+    "lost_fraction": 1.0,
+    "duration_days": 30,
+    "confidence": "medium",
+    "summary": "Drone attack causes a complete shutdown of the Langeled gas pipeline, severely reducing Norwegian gas imports to Great Britain."
+  }
+}

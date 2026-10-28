@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GridShock</title>
+<script src="https://unpkg.com/globe.gl@2.46.1/dist/globe.gl.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#020308; --accent:#22d3ee; --red:#ef4444; --amber:#f59e0b; --green:#22c55e;
+    --gas:#22d3ee; --power:#a78bfa; --oil:#f59e0b;
+    --glass:rgba(10,14,24,.55); --edge:rgba(148,163,184,.14); --text:#cbd5e1; --dim:#64748b;
+    --ease:cubic-bezier(.2,.8,.2,1);
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font:13px/1.45 Inter,system-ui,sans-serif; }
+  .mono { font-family:"JetBrains Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums; }
+  .glass { background:var(--glass); border:1px solid var(--edge); backdrop-filter:blur(16px) saturate(140%); -webkit-backdrop-filter:blur(16px) saturate(140%); border-radius:14px; }
+  .label { font-size:9.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--dim); font-weight:600; }
+  button { font:inherit; color:inherit; cursor:pointer; }
+  #globe { position:fixed; inset:0; }
+
+  /* ticker along the very top edge */
+  #ticker { position:fixed; top:0; left:0; right:0; height:22px; overflow:hidden; white-space:nowrap; z-index:20;
+    background:linear-gradient(90deg,rgba(2,3,8,.9),rgba(2,3,8,.6),rgba(2,3,8,.9)); border-bottom:1px solid var(--edge);
+    font-size:10.5px; line-height:22px; color:var(--dim); }
+  #tickerTrack { display:inline-block; padding-left:100%; animation:scroll 200s linear infinite; }
+  #ticker:hover #tickerTrack { animation-play-state:paused; }
+  #tickerTrack span { margin:0 28px; }
+  #tickerTrack .hot { color:var(--red); }
+  @keyframes scroll { to { transform:translateX(-100%); } }
+
+  /* brand */
+  #brand { position:fixed; top:38px; left:24px; z-index:10; }
+  #brand h1 { margin:0; font-weight:800; font-size:22px; letter-spacing:.32em; color:#f8fafc; }
+  #brand h1 b { color:var(--accent); font-weight:800; }
+  .sub { display:flex; align-items:center; gap:10px; margin-top:6px; font-size:10.5px; }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--red); animation:pulse 1.4s infinite; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(239,68,68,.7)} 70%{box-shadow:0 0 0 9px rgba(239,68,68,0)} 100%{box-shadow:0 0 0 0 rgba(239,68,68,0)} }
+  .badge { border:1px solid rgba(34,211,238,.35); color:var(--accent); padding:1px 8px; border-radius:99px; }
+  #status { margin-top:6px; font-size:10px; color:var(--dim); max-width:300px; }
+  #status .warn { color:var(--amber); }
+
+  /* top-right controls */
+  #controls { position:fixed; top:36px; right:24px; z-index:10; display:flex; align-items:center; gap:14px; font-size:11px; color:var(--dim); }
+  #controls label { display:flex; gap:6px; align-items:center; cursor:pointer; }
+  #controls input { accent-color:var(--accent); }
+  .ghost { background:none; border:1px solid var(--edge); border-radius:99px; padding:3px 11px; transition:border-color .2s, color .2s; }
+  .ghost:hover { border-color:var(--accent); color:var(--accent); }
+  #clock { color:var(--accent); font-size:12px; }
+
+  /* slim threat rail */
+  #rail { position:fixed; left:24px; top:130px; max-height:calc(100vh - 360px); width:250px; z-index:10; display:flex; flex-direction:column; padding:10px 6px 6px; }
+  #rail .head { display:flex; justify-content:space-between; align-items:center; padding:0 8px 8px; }
+  #threats { overflow-y:auto; flex:1; min-height:0; }
+  #threats::-webkit-scrollbar { width:4px; } #threats::-webkit-scrollbar-thumb { background:var(--edge); border-radius:2px; }
+  .t { display:grid; grid-template-columns:34px 1fr; gap:8px; align-items:start; padding:8px; border-radius:10px; cursor:pointer;
+    transition:background .25s var(--ease), transform .25s var(--ease); opacity:0; animation:fadeIn .5s var(--ease) forwards; }
+  .t:hover { background:rgba(148,163,184,.08); transform:translateX(3px); }
+  .t.on { background:rgba(239,68,68,.12); box-shadow:inset 2px 0 0 var(--red); }
+  .t .n { font-size:17px; font-weight:700; text-align:right; }
+  .t .h { color:#e2e8f0; font-size:12px; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .t .m { display:flex; align-items:center; gap:6px; margin-top:3px; font-size:9.5px; color:var(--dim); text-transform:uppercase; letter-spacing:.08em; }
+  .fdot { width:6px; height:6px; border-radius:50%; flex:none; }
+  @keyframes fadeIn { from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:none} }
+  .empty { padding:14px 10px; color:var(--dim); font-size:12px; }
+  .sec { display:flex; justify-content:space-between; align-items:center; padding:12px 8px 4px; }
+  .sec:first-child { padding-top:2px; }
+  .sec-empty { padding:2px 8px 6px 50px; color:#475569; font-size:11px; }
+  /* event-type badges */
+  .kb { display:inline-block; font:600 8.5px/1 "JetBrains Mono",monospace; letter-spacing:.12em; padding:3px 7px; border-radius:99px; border:1px solid; white-space:nowrap; }
+  .kb.live { color:#4ade80; border-color:rgba(74,222,128,.45); background:rgba(74,222,128,.08); }
+  .kb.reported { color:#60a5fa; border-color:rgba(96,165,250,.45); background:rgba(96,165,250,.08); }
+  .kb.scenario { color:#fbbf24; border-color:rgba(251,191,36,.45); background:rgba(251,191,36,.08); }
+  #kinds { border-top:1px solid var(--edge); margin-top:6px; padding:8px 8px 2px; display:grid; gap:4px; font-size:10px; color:var(--dim); }
+  #kinds div { display:flex; align-items:center; gap:8px; }
+  #kinds .kb { width:96px; text-align:center; }
+
+  /* briefing panel */
+  #panel { position:fixed; top:70px; right:24px; bottom:100px; width:380px; z-index:15; padding:18px 18px 16px; overflow-y:auto;
+    transform:translateX(calc(100% + 40px)); opacity:0; transition:transform .55s var(--ease), opacity .4s; }
+  #panel.open { transform:none; opacity:1; }
+  #panel::-webkit-scrollbar { width:4px; } #panel::-webkit-scrollbar-thumb { background:var(--edge); }
+  #close { position:absolute; top:12px; right:12px; background:none; border:none; color:var(--dim); font-size:18px; line-height:1; }
+  #close:hover { color:#fff; }
+  #pTitle { color:#f1f5f9; font-size:15px; font-weight:600; line-height:1.35; margin:6px 24px 6px 0; }
+  #pSummary { color:#94a3b8; font-size:12px; }
+  #pMeta { font-size:10px; color:var(--dim); margin-top:6px; }
+  #pMeta a { color:var(--accent); text-decoration:none; }
+  .score { display:flex; align-items:center; gap:16px; margin:18px 0 6px; }
+  .ring { --v:0; --c:var(--red); width:92px; height:92px; border-radius:50%; flex:none; display:grid; place-items:center;
+    background:conic-gradient(var(--c) calc(var(--v)*3.6deg), rgba(148,163,184,.12) 0); transition:--v 1s; }
+  .ring > div { width:76px; height:76px; border-radius:50%; background:#070a12; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .ring .big { font-size:30px; font-weight:700; line-height:1; }
+  .ring .lvl { font-size:8.5px; letter-spacing:.2em; text-transform:uppercase; margin-top:3px; }
+  .stats { display:grid; grid-template-columns:1fr 1fr; gap:6px; flex:1; }
+  .stat { padding:6px 9px; border-radius:9px; background:rgba(255,255,255,.03); border:1px solid var(--edge); }
+  .stat .v { font-size:17px; font-weight:700; }
+  .stat .r { font-size:9.5px; color:var(--dim); margin-top:1px; }
+  #pBadges { display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; margin-top:8px; font-size:10px; color:var(--dim); }
+  #pBadges a { color:var(--accent); text-decoration:none; }
+  .sim { margin-top:8px; padding:6px 9px; border-radius:8px; font-size:11.5px; color:#fbbf24; background:rgba(251,191,36,.07); border:1px dashed rgba(251,191,36,.4); }
+  #pChain { margin-top:10px; font-size:10.5px; color:#94a3b8; display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px; }
+  #pChain b { color:#fb923c; font-weight:600; } #pChain i { font-style:normal; color:var(--dim); }
+  .disc { font-size:9.5px; color:var(--dim); font-style:italic; margin-top:6px; }
+  #chartWrap { height:130px; margin-top:6px; }
+  #how { margin-top:14px; border:1px solid var(--edge); border-radius:11px; padding:0 12px; }
+  #how summary { cursor:pointer; padding:10px 0; list-style:none; display:flex; justify-content:space-between; }
+  #how summary::-webkit-details-marker { display:none; }
+  #how summary::after { content:"+"; color:var(--dim); } #how[open] summary::after { content:"−"; }
+  .step { display:grid; grid-template-columns:62px 1fr; gap:8px; padding:7px 0; border-top:1px solid var(--edge); font-size:11px; line-height:1.45; }
+  .step b { color:#e2e8f0; font-weight:600; }
+  .step .f { color:#94a3b8; font-family:"JetBrains Mono",monospace; font-size:10.5px; }
+  .by { font:600 8.5px/1 "JetBrains Mono",monospace; letter-spacing:.08em; padding:3px 0; border-radius:5px; text-align:center; height:fit-content; }
+  .by.gemma { color:var(--accent); background:rgba(34,211,238,.1); }
+  .by.python { color:#c4b5fd; background:rgba(167,139,250,.12); }
+  #brief { margin-top:16px; padding:12px 13px; border-radius:11px; border:1px solid rgba(34,211,238,.3); background:rgba(34,211,238,.05); }
+  #briefText { color:#dbe4ee; font-size:12.5px; line-height:1.6; margin-top:7px; min-height:60px; white-space:pre-wrap; }
+  .brief-err { color:var(--amber); font-size:12px; margin-bottom:10px; white-space:normal; }
+  .retry { font-size:11px; }
+  .caret { display:inline-block; width:7px; height:13px; background:var(--accent); vertical-align:-2px; margin-left:1px; animation:blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+  .spin { width:12px; height:12px; border:2px solid rgba(148,163,184,.2); border-top-color:var(--accent); border-radius:50%; display:inline-block; animation:spin .8s linear infinite; vertical-align:-2px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* command bar */
+  #presets { position:fixed; left:50%; bottom:22px; transform:translateX(-50%); z-index:16; display:flex; gap:8px; max-width:calc(100vw - 32px); overflow-x:auto; }
+  .pchip { white-space:nowrap; font-size:11px; padding:5px 12px; border-radius:99px; color:#fbbf24; background:rgba(10,14,24,.6);
+    border:1px dashed rgba(251,191,36,.4); backdrop-filter:blur(10px); transition:background .2s, border-color .2s; }
+  .pchip:hover { background:rgba(251,191,36,.12); border-style:solid; }
+  .pchip:disabled { opacity:.5; cursor:wait; }
+  #cmd { position:fixed; left:50%; bottom:62px; transform:translateX(-50%); width:min(600px, calc(100vw - 32px)); z-index:16;
+    display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:16px; transition:box-shadow .3s, border-color .3s; }
+  #cmd:focus-within { border-color:rgba(34,211,238,.5); box-shadow:0 0 0 4px rgba(34,211,238,.08), 0 20px 60px rgba(0,0,0,.6); }
+  #cmd .q { color:var(--accent); font-size:15px; }
+  #whatIf { flex:1; background:none; border:none; outline:none; color:#f1f5f9; font:15px Inter,sans-serif; min-width:0; }
+  #whatIf::placeholder { color:#475569; }
+  #cmdHint { font-size:10px; color:var(--dim); white-space:nowrap; }
+  kbd { font-family:"JetBrains Mono",monospace; border:1px solid var(--edge); border-radius:5px; padding:0 5px; font-size:10px; }
+  #cmdMsg { position:fixed; left:50%; bottom:120px; transform:translateX(-50%); z-index:16; font-size:11px; color:var(--dim); width:max-content; max-width:min(600px, calc(100vw - 32px)); text-align:center; }
+  #attach { background:none; border:1px solid var(--edge); border-radius:9px; width:30px; height:30px; display:grid; place-items:center; color:var(--dim); flex:none; transition:color .2s, border-color .2s; }
+  #attach:hover { color:var(--accent); border-color:var(--accent); }
+  #chip { display:none; align-items:center; gap:6px; padding:3px 4px 3px 3px; border-radius:9px; background:rgba(34,211,238,.1); border:1px solid rgba(34,211,238,.35); flex:none; }
+  #chip.on { display:flex; }
+  #chip img { width:26px; height:26px; object-fit:cover; border-radius:6px; display:block; }
+  #chip button { background:none; border:none; color:var(--dim); padding:0 3px; font-size:14px; line-height:1; }
+  #chip button:hover { color:#fff; }
+  #drop { position:fixed; inset:0; z-index:30; display:grid; place-items:center; pointer-events:none; opacity:0; transition:opacity .2s;
+    background:rgba(2,3,8,.6); backdrop-filter:blur(4px); }
+  #drop.on { opacity:1; }
+  #drop div { border:1.5px dashed var(--accent); border-radius:22px; padding:44px 64px; text-align:center; color:#e2e8f0; font-size:16px; }
+  #drop small { display:block; color:var(--dim); font-size:11px; margin-top:6px; }
+  #vision { display:none; margin-top:14px; padding:10px; border-radius:11px; border:1px solid rgba(34,211,238,.3); background:rgba(34,211,238,.05); }
+  #vision.on { display:block; }
+  #vision .row { display:flex; gap:10px; margin-top:7px; }
+  #vision img { width:96px; height:72px; object-fit:cover; border-radius:8px; flex:none; border:1px solid var(--edge); }
+  #visionText { font-size:12px; color:#dbe4ee; line-height:1.5; }
+  #visionText b { color:var(--accent); font-weight:600; }
+  #cmdMsg.err { color:var(--amber); }
+
+  /* power mix */
+  #mix { position:fixed; left:24px; bottom:28px; width:250px; z-index:10; padding:12px 14px; display:flex; gap:12px; align-items:center; }
+  #mixRing { width:84px; height:84px; flex:none; position:relative; }
+  #mixRing span { position:absolute; inset:0; display:grid; place-items:center; font-size:9px; letter-spacing:.15em; color:var(--dim); }
+  #mixList { font-size:10.5px; flex:1; }
+  #mixList div { display:flex; align-items:center; gap:6px; justify-content:space-between; }
+  #mixList div span:first-child { display:flex; align-items:center; gap:6px; text-transform:capitalize; }
+
+  /* legend */
+  #legend { position:fixed; right:24px; bottom:22px; z-index:10; display:grid; grid-template-columns:repeat(2, auto); gap:4px 16px; font-size:10px; color:var(--dim); transition:opacity .4s; }
+  #legend span { display:flex; align-items:center; gap:6px; }
+  #legend i { width:16px; height:2px; border-radius:2px; display:inline-block; }
+  body.panel-open #legend { opacity:0; }
+
+  .scene-tooltip { font:11px Inter,sans-serif !important; background:rgba(10,14,24,.85); border:1px solid var(--edge); padding:5px 9px; border-radius:8px; }
+
+  @media (max-width: 820px) {
+    #rail { top:auto; bottom:118px; height:30vh; width:calc(100vw - 32px); left:16px; }
+    #mix, #legend, #controls label, #cmdHint { display:none; }
+    #brand { left:16px; } #controls { right:16px; }
+    #panel { left:16px; right:16px; width:auto; top:auto; bottom:118px; max-height:60vh; transform:translateY(calc(100% + 100px)); }
+    #panel.open { transform:none; }
+  }
+</style>
+</head>
+<body>
+<div id="globe"></div>
+
+<div id="ticker" class="mono"><div id="tickerTrack">Connecting to live feeds…</div></div>
+
+<div id="brand">
+  <h1>GRID<b>SHOCK</b></h1>
+  <div class="sub mono"><span class="dot"></span><span id="mode" style="color:var(--red);font-weight:700">LIVE</span><span class="badge">Powered by Gemma 4</span></div>
+  <div id="status" class="mono"></div>
+</div>
+
+<div id="controls" class="mono">
+  <label><input id="demo" type="checkbox"> demo</label>
+  <button id="refresh" class="ghost">↻ refresh</button>
+  <span id="clock"></span>
+</div>
+
+<aside id="rail" class="glass">
+  <div class="head"><span class="label">Threats to GB supply</span><span id="count" class="mono label"></span></div>
+  <div id="threats"><div class="empty"><span class="spin"></span> Gemma 4 is reading the news…</div></div>
+  <div id="kinds">
+    <div><span class="kb live">LIVE</span>from news feeds</div>
+    <div><span class="kb reported">REPORTED</span>from an uploaded image</div>
+    <div><span class="kb scenario">HYPOTHETICAL</span>simulation only</div>
+  </div>
+</aside>
+
+<aside id="panel" class="glass" aria-hidden="true">
+  <button id="close" title="Close (Esc)">×</button>
+  <div class="label" id="pKicker">Event</div>
+  <div id="pTitle"></div>
+  <div id="pBadges" class="mono"></div>
+  <div id="pSim" class="sim" hidden>Simulation. This event has not happened.</div>
+  <div id="pSummary" style="margin-top:8px"></div>
+  <div id="pChain" class="mono"></div>
+  <div id="pMeta" class="mono"></div>
+  <div id="vision">
+    <div class="label" style="color:var(--accent)">Multimodal · Gemma 4</div>
+    <div class="row"><img id="visionImg" alt="Uploaded image"><div id="visionText"></div></div>
+  </div>
+  <div class="score">
+    <div class="ring" id="ring"><div><span class="big mono" id="riskNum">0</span><span class="lvl" id="riskLvl"></span></div></div>
+    <div class="stats">
+      <div class="stat"><div class="label" id="lLost">Supply lost</div><div class="v mono" id="sLost"></div></div>
+      <div class="stat"><div class="label">Duration</div><div class="v mono" id="sDays"></div></div>
+      <div class="stat"><div class="label" id="lA"></div><div class="v mono" id="sA"></div><div class="r mono" id="rA"></div></div>
+      <div class="stat"><div class="label" id="lB"></div><div class="v mono" id="sB"></div><div class="r mono" id="rB"></div></div>
+    </div>
+  </div>
+  <div class="disc">Indicative estimate. Stated assumptions, not a market forecast.</div>
+  <div class="label" style="margin-top:12px">Price index, today = 100 · before → after, bar = range</div>
+  <div id="chartWrap"><canvas id="chart"></canvas></div>
+  <div id="brief">
+    <div class="label" style="color:var(--accent)">Gemma 4 briefing</div>
+    <div id="briefText"></div>
+  </div>
+  <details id="how">
+    <summary class="label">How it's calculated</summary>
+    <div id="howSteps"></div>
+    <div class="disc" style="padding-bottom:10px">Gemma 4 reads and extracts; Python does every calculation. Indicative estimate. Stated assumptions, not a market forecast.</div>
+  </details>
+</aside>
+
+<div id="mix" class="glass">
+  <div id="mixRing"><canvas id="mixChart"></canvas><span class="mono">GB</span></div>
+  <div style="flex:1">
+    <div class="label" style="display:flex;justify-content:space-between"><span>Power mix</span><span id="mixLive"></span></div>
+    <div id="mixList" class="mono" style="margin-top:6px"></div>
+  </div>
+</div>
+
+<div id="legend" class="mono">
+  <span><i style="background:var(--gas)"></i>gas</span>
+  <span><i style="background:var(--oil)"></i>oil</span>
+  <span><i style="background:var(--power)"></i>power</span>
+  <span><i style="background:var(--red)"></i>live hit</span>
+  <span><i style="background:repeating-linear-gradient(90deg,var(--red) 0 2px,transparent 2px 4px)"></i>reported</span>
+  <span><i style="background:repeating-linear-gradient(90deg,#fbbf24 0 5px,transparent 5px 8px)"></i>scenario</span>
+  <span><i style="background:linear-gradient(90deg,#fde68a,#fb923c)"></i>shockwave</span>
+</div>
+
+<div id="presets"></div>
+<div id="drop"><div>Drop an image for Gemma 4<small>photo · satellite image · news screenshot</small></div></div>
+<div id="cmdMsg" class="mono"></div>
+<form id="cmd" class="glass" autocomplete="off">
+  <span class="q mono">⌁</span>
+  <span id="chip"><img id="chipImg" alt=""><button type="button" id="chipX" title="Remove image">×</button></span>
+  <input id="whatIf" placeholder="What if… a drone strike shuts Nyhamna gas plant for two weeks">
+  <button type="button" id="attach" title="Add an image for Gemma 4 (or drag, drop or paste)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+  </button>
+  <input type="file" id="file" accept="image/*" hidden>
+  <span id="cmdHint"><kbd>⌘K</kbd> <kbd>↵</kbd></span>
+</form>
+
+<script>
+const UK = { lat:52.5, lng:-1.5 };
+const FUEL = { gas:"#22d3ee", power:"#a78bfa", oil:"#f59e0b" };
+const RISK = { High:"#ef4444", Medium:"#f59e0b", Low:"#22c55e" };
+const MIX_COLORS = { gas:"#22d3ee", wind:"#e2e8f0", nuclear:"#a78bfa", imports:"#64748b", biomass:"#84cc16",
+  solar:"#facc15", hydro:"#3b82f6", coal:"#78716c", other:"#475569" };
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pct = v => (v > 0 ? "+" : "") + v.toFixed(1) + "%";
+const shortTitle = s => s.replace(/\s+-\s+[^-]+$/, "");  // drop " - Publisher"
+const rgba = (hex, a) => `rgba(${parseInt(hex.slice(1,3),16)},${parseInt(hex.slice(3,5),16)},${parseInt(hex.slice(5,7),16)},${a})`;
+Chart.defaults.color = "#64748b"; Chart.defaults.font.family = "JetBrains Mono, monospace"; Chart.defaults.font.size = 9;
+
+let assets = [], threats = [], selectedId = null, pollTimer = null, typer = null, chart = null, mixChart = null, idleTimer = null;
+
+// ---------- globe ----------
+// arcs, points and rings are sized in degrees, so they balloon when zoomed in.
+// zoomK shrinks them with the camera so they keep roughly the same on-screen size.
+let zoomK = 1;
+const arcStroke = a => zoomK * (a.pulse ? 0.22 : a.shock ? 0.4 : thickness(a) * (a.id === selectedAsset() ? 1.4 : 1));
+const pointRadius = p => zoomK * (p.hub ? 0.32 : 0.16);
+const ringRadius = r => zoomK * (r.event ? 6.5 : r.selected ? 3.6 : 1.8);
+const globe = Globe()($("globe"))
+  .backgroundColor("#020308")
+  .showAtmosphere(true).atmosphereColor("#1d4ed8").atmosphereAltitude(0.2)
+  // two kinds of arc: "flow" (asset -> Britain) and "shock" (event location -> affected asset)
+  .arcStartLat(a => a.shock ? a.from.lat : a.lat).arcStartLng(a => a.shock ? a.from.lon : a.lon)
+  .arcEndLat(a => a.shock ? a.to.lat : UK.lat).arcEndLng(a => a.shock ? a.to.lon : UK.lng)
+  .arcColor(a => a.shock ? ["rgba(253,230,138,.95)", "#fb923c"] : arcStyle(a).color)
+  .arcStroke(arcStroke)
+  .arcDashLength(a => a.pulse ? 0.05 : a.shock ? 0.12 : arcStyle(a).dash)
+  .arcDashGap(a => a.pulse ? 0.3 : a.shock ? 0.06 : arcStyle(a).gap)
+  .arcDashInitialGap(a => a.shock || hitKind(a.id) ? 0 : (a.lat * 7 % 1 + 1) % 1)
+  .arcDashAnimateTime(a => a.pulse ? 1500 : a.shock ? 700 : hitKind(a.id) ? 0 : 2600 - thickness(a) * 900)  // a hit flow stops moving
+  .arcAltitude(a => a.shock ? a.alt : flowAltitude(a))
+  .arcLabel(a => a.shock ? `<b>Shockwave</b><br><span style="color:#94a3b8">${esc(a.from.name)} → ${esc(a.toName)}</span>`
+    : `<b>${esc(a.name)}</b><br><span style="color:#94a3b8">${esc(a.country)} · ${assetSize(a)}</span>`)
+  .onArcClick(a => a.shock ? null : selectByAsset(a.id))
+  // asset + hub points
+  .pointLat("lat").pointLng("lon").pointAltitude(0.0015).pointResolution(16)  // flat discs, not cylinders
+  .pointRadius(pointRadius)
+  .pointColor(p => p.hub ? "#f8fafc" : hitKind(p.id) ? KIND_COLOR[hitKind(p.id)] : (FUEL[p.fuel] || FUEL.gas))
+  .pointLabel(p => esc(p.name))
+  .onPointClick(p => p.hub ? null : selectByAsset(p.id))
+  // pulsing threat rings
+  .ringLat("lat").ringLng("lon")
+  .ringColor(r => t => rgba(r.color, (1 - t) * (r.selected ? 1 : .55)))
+  .ringMaxRadius(ringRadius)
+  .ringPropagationSpeed(r => r.selected ? 2.4 : 1.4)
+  .ringRepeatPeriod(r => r.event ? 550 : r.selected ? 700 : 1300)
+  // name tags for the selected chain
+  .labelLat("lat").labelLng("lon").labelText("text").labelSize(() => 0.85 * zoomK).labelDotRadius(() => 0.22 * zoomK)
+  .labelColor(l => l.color).labelResolution(2).labelAltitude(0.01)
+  .pointOfView({ lat:46, lng:10, altitude:1.75 }, 0);
+
+// sharp at every zoom: Esri dark-grey map tiles instead of one stretched texture
+const ESRI_DARK = (x, y, l) => `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/${l}/${y}/${x}`;
+if (typeof globe.globeTileEngineUrl === "function") globe.globeTileEngineUrl(ESRI_DARK).globeTileEngineMaxLevel(11);
+else globe.globeImageUrl("https://unpkg.com/three-globe@2.45.3/example/img/earth-night.jpg");
+// dim the scene lights for a darker, night-like globe (arcs are unlit, so they keep full colour)
+setTimeout(() => (globe.lights?.() || []).forEach(l => { l.intensity *= l.isAmbientLight ? 0.45 : 0.55; }), 0);
+
+const GLOBE_RADIUS = 100;  // globe.gl units
+const MIN_ALT = 0.12, MAX_ALT = 3.2;
+const controls = globe.controls();
+controls.minDistance = GLOBE_RADIUS * (1 + MIN_ALT);  // no zooming into empty pixels
+controls.maxDistance = GLOBE_RADIUS * (1 + MAX_ALT);  // no drifting off into space
+controls.autoRotate = true; controls.autoRotateSpeed = 0.35; controls.enableDamping = true;
+controls.addEventListener("start", () => { controls.autoRotate = false; scheduleIdle(); });
+function scheduleIdle() {  // resume slow rotation after a quiet spell, unless something is selected
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => { if (!selectedId) controls.autoRotate = true; }, 20000);
+}
+addEventListener("resize", () => globe.width(innerWidth).height(innerHeight));
+
+function thickness(a) {  // 0.25-0.5 at the default view, by UK share or capacity
+  if (a.fuel === "gas" || a.fuel === "oil") return 0.25 + Math.min(a.uk_share_pct || 3, 35) / 35 * 0.25;
+  return 0.25 + Math.min(a.capacity_gw || 1, 2.5) / 2.5 * 0.2;
+}
+
+setInterval(() => {
+  const k = Math.round(Math.min(1.3, Math.max(0.1, globe.pointOfView().altitude / 1.75)) * 20) / 20;
+  if (k === zoomK) return;
+  zoomK = k;
+  globe.arcStroke(arcStroke).pointRadius(pointRadius).ringMaxRadius(ringRadius)
+    .labelSize(() => 0.85 * zoomK).labelDotRadius(() => 0.22 * zoomK);
+}, 200);
+
+// short European routes stay low so they don't pile up into a blob over Britain
+function flowAltitude(a) {
+  const deg = angularDist(a, { lat:UK.lat, lon:UK.lng });
+  return deg * Math.PI / 180 / 2 * (deg < 20 ? 0.2 : 0.4);
+}
+function assetSize(a) {
+  if (a.fuel === "oil") return a.global_share_pct ? `~${a.global_share_pct}% of world oil` : "oil";
+  return a.uk_share_pct ? `~${a.uk_share_pct}% of UK gas` : `${a.capacity_gw} GW`;
+}
+const KIND_COLOR = { live:"#ef4444", reported:"#ef4444", scenario:"#fbbf24" };
+const KIND_ORDER = ["live", "reported", "scenario"];
+const selectedThreat = () => threats.find(t => t.id === selectedId);
+const selectedAsset = () => selectedThreat()?.asset?.id;
+
+// which kind of event (if any) hits this asset; the selected threat wins, then live > reported > scenario
+let hitKinds = new Map();
+function computeHits() {
+  hitKinds = new Map();
+  const sel = selectedThreat();
+  for (const k of KIND_ORDER)
+    for (const t of threats) if (t.kind === k && t.asset && !hitKinds.has(t.asset.id)) hitKinds.set(t.asset.id, k);
+  if (sel?.asset) hitKinds.set(sel.asset.id, sel.kind);
+}
+const hitKind = id => hitKinds.get(id);
+
+function arcStyle(a) {
+  const base = FUEL[a.fuel] || FUEL.gas;
+  switch (hitKind(a.id)) {
+    case "live":     return { color:["rgba(239,68,68,.95)", "rgba(239,68,68,.6)"], dash:0.44, gap:0.12 };  // solid red, broken mid-way
+    case "reported": return { color:["rgba(239,68,68,.95)", "rgba(239,68,68,.6)"], dash:0.012, gap:0.014 }; // dotted red
+    case "scenario": return { color:["rgba(251,191,36,.95)", "rgba(251,191,36,.6)"], dash:0.05, gap:0.035 }; // dashed amber
+    default:         return { color:[rgba(base, .25), base], dash:0.35, gap:0.12 };
+  }
+}
+
+function angularDist(a, b) {  // degrees between two lat/lon points
+  const r = Math.PI / 180;
+  const c = Math.sin(a.lat * r) * Math.sin(b.lat * r) + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.cos((a.lon - b.lon) * r);
+  return Math.acos(Math.min(1, Math.max(-1, c))) / r;
+}
+
+function paintGlobe() {
+  computeHits();
+  const sel = selectedThreat();
+  const arcs = assets.map(a => ({ ...a }));
+  const rings = assets.filter(a => hitKind(a.id)).map(a =>
+    ({ lat:a.lat, lon:a.lon, color:KIND_COLOR[hitKind(a.id)], selected:a.id === sel?.asset?.id }));
+  const labels = [];
+  if (sel?.event) {
+    const gb = { lat:UK.lat, lon:UK.lng, name:"Great Britain" };
+    const target = sel.asset || gb;
+    const dist = angularDist(sel.event, target);
+    // shockwave: event location -> affected asset
+    if (dist > 0.3) arcs.push({ shock:true, from:sel.event, to:target, toName:target.name, alt:Math.min(0.5, 0.06 + dist / 120) });
+    // then the shock travels on along the broken flow to Britain (drawn just above the flow arc)
+    if (sel.asset) arcs.push({ shock:true, pulse:true, from:sel.asset, to:gb, toName:gb.name,
+      alt:flowAltitude(sel.asset) * 1.08 + 0.003 });
+    rings.push({ lat:sel.event.lat, lon:sel.event.lon, color:"#fb923c", selected:true, event:true });
+    labels.push({ lat:sel.event.lat, lon:sel.event.lon, text:sel.event.name, color:"#fdba74" });
+    if (sel.asset && dist > 0.3) labels.push({ lat:sel.asset.lat, lon:sel.asset.lon, text:sel.asset.name, color:"#fca5a5" });
+  }
+  globe.arcsData(arcs);
+  globe.pointsData([...assets, { hub:true, name:"Great Britain", lat:UK.lat, lon:UK.lng }]);
+  globe.ringsData(rings);
+  globe.labelsData(labels);
+}
+
+// fly so the event, the hit asset and Britain are all in view
+function frameChain(t) {
+  const pts = [t.event, t.asset, { lat:UK.lat, lon:UK.lng }].filter(Boolean);
+  const r = Math.PI / 180;
+  let x = 0, y = 0, z = 0;
+  for (const p of pts) { x += Math.cos(p.lat * r) * Math.cos(p.lon * r); y += Math.cos(p.lat * r) * Math.sin(p.lon * r); z += Math.sin(p.lat * r); }
+  const centre = { lat:Math.atan2(z, Math.hypot(x, y)) / r, lon:Math.atan2(y, x) / r };
+  const spread = Math.max(...pts.map(p => angularDist(centre, p)));
+  const altitude = Math.min(MAX_ALT - 0.2, Math.max(0.9, 0.45 + spread / 26));
+  globe.pointOfView({ lat:centre.lat, lng:centre.lon, altitude }, 1700);
+}
+
+// ---------- data ----------
+async function loadAssets() {
+  assets = await (await fetch("/api/assets")).json();
+  paintGlobe();
+}
+
+async function loadThreats(refresh=false) {
+  const demo = $("demo").checked;
+  clearTimeout(pollTimer);
+  try {
+    const data = await (await fetch(`/api/threats?demo=${demo}&refresh=${refresh}`)).json();
+    threats = [...threats.filter(t => t.kind !== "live"), ...data.threats];
+    $("mode").textContent = data.mode === "live" ? "LIVE" : "DEMO";
+    $("count").textContent = data.threats.length ? `${data.threats.length} active` : "";
+    $("status").innerHTML = data.analysing
+      ? `<span class="spin"></span> <span style="color:var(--accent)">Gemma 4 analysing live news…</span>`
+      : `${data.screened} screened · ${data.updated}` + (data.errors.length ? `<br><span class="warn">${esc(data.errors.join(" · "))}</span>` : "");
+    if (data.analysing) pollTimer = setTimeout(() => loadThreats(false), 4000);
+    renderTicker(data.ticker);
+    renderThreats();
+    paintGlobe();
+    if (selectedId && !threats.some(t => t.id === selectedId)) closePanel();
+  } catch (e) {
+    $("threats").innerHTML = `<div class="empty" style="color:var(--amber)">Could not load threats: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderTicker(items) {
+  $("tickerTrack").innerHTML = items.map(t => `<span class="${t.flagged ? "hot" : ""}">${t.flagged ? "▲" : "·"} ${esc(t.title)}</span>`).join("");
+}
+
+const SECTIONS = [
+  { kind:"live", title:"Live", badge:"LIVE", empty:"No live threats right now." },
+  { kind:"reported", title:"Reported", badge:"REPORTED", empty:"Drop an image to report an event." },
+  { kind:"scenario", title:"Scenarios", badge:"HYPOTHETICAL", empty:"Run a what-if or a preset below." },
+];
+
+function renderThreats() {
+  let n = 0;
+  $("threats").innerHTML = SECTIONS.map(sec => {
+    const list = threats.filter(t => t.kind === sec.kind);
+    const rows = list.map(t => {
+      const i = t.impact;
+      return `<div class="t ${t.id === selectedId ? "on" : ""}" data-id="${t.id}" style="animation-delay:${n++ * 40}ms">
+        <div class="n mono" style="color:${RISK[i.risk_level]}">${i.risk_score}</div>
+        <div><div class="h">${esc(shortTitle(t.title))}</div>
+          <div class="m"><span class="fdot" style="background:${FUEL[i.fuel] || FUEL.gas}"></span>${esc(i.fuel)}
+            ${t.kind === "reported" && t.corroboration?.status === "confirmed" ? `<span style="color:#60a5fa">confirmed</span>` : ""}
+            ${t.similar?.length ? `<span style="color:var(--amber)">+${t.similar.length} similar</span>` : ""}</div></div>
+      </div>`;
+    }).join("");
+    return `<div class="sec"><span class="kb ${sec.kind}">${sec.title.toUpperCase()}</span><span class="label mono">${list.length || ""}</span></div>`
+      + (rows || `<div class="sec-empty">${sec.empty}</div>`);
+  }).join("");
+  document.querySelectorAll(".t").forEach(el => el.onclick = () => select(el.dataset.id));
+}
+
+// ---------- selection ----------
+function selectByAsset(assetId) {
+  const t = threats.find(t => t.asset?.id === assetId);
+  if (t) select(t.id);
+}
+
+function select(id) {
+  const t = threats.find(x => x.id === id);
+  if (!t) return;
+  selectedId = id;
+  document.querySelectorAll(".t").forEach(el => el.classList.toggle("on", el.dataset.id === id));
+  paintGlobe();
+  controls.autoRotate = false; clearTimeout(idleTimer);
+  frameChain(t);
+  openPanel(t);
+}
+
+function openPanel(t) {
+  const i = t.impact, c = RISK[i.risk_level];
+  $("pKicker").textContent = { live:"Live news", reported:"Image report", scenario:"What-if scenario" }[t.kind];
+  $("pBadges").innerHTML = badgeHtml(t);
+  $("pSim").hidden = t.kind !== "scenario";
+  $("pChain").innerHTML = t.event
+    ? `<b>⚡ ${esc(t.event.name)}</b><i>→</i>${esc(t.asset ? t.asset.name : "unmapped asset")}<i>→</i>Great Britain` : "";
+  $("vision").classList.toggle("on", !!t.vision);
+  if (t.vision) {
+    $("visionImg").style.display = t.thumb ? "" : "none";
+    if (t.thumb) $("visionImg").src = t.thumb;
+    $("visionText").innerHTML = `<b>Gemma 4 sees:</b> ${esc(t.vision.description)}`;
+  }
+  $("pTitle").textContent = shortTitle(t.title);
+  $("pSummary").textContent = t.shock.summary || "";
+  $("pMeta").innerHTML = `${Math.round((t.shock.lost_fraction || 0) * 100)}% of flow lost · ${esc(t.shock.confidence)} confidence`
+    + (t.similar?.length ? `<br><span style="color:var(--amber)">+${t.similar.length} similar report${t.similar.length > 1 ? "s" : ""}</span>` : "");
+  $("ring").style.setProperty("--c", c);
+  countUp($("riskNum"), i.risk_score, v => { $("ring").style.setProperty("--v", v); return Math.round(v); });
+  $("riskNum").style.color = c;
+  $("riskLvl").textContent = i.risk_level; $("riskLvl").style.color = c;
+  $("lLost").textContent = i.supply_label;
+  $("sLost").textContent = i.supply_loss_pct.toFixed(i.fuel === "oil" ? 2 : 1) + "%";
+  $("sDays").textContent = Math.round(i.duration_days) + "d";
+  i.prices.forEach((p, n) => {
+    const k = "AB"[n];
+    $("l" + k).textContent = p.label;
+    setDelta($("s" + k), p.central);
+    $("r" + k).textContent = `range ${pct(p.low)} to ${pct(p.high)}`;
+  });
+  $("howSteps").innerHTML = i.calc.map(c => `<div class="step"><span class="by ${c.by === "Python" ? "python" : "gemma"}">${esc(c.by.toUpperCase())}</span>
+    <div><b>${esc(c.label)}</b><div class="f">${esc(c.formula)}</div></div></div>`).join("");
+  drawChart(i);
+  $("panel").classList.add("open"); $("panel").setAttribute("aria-hidden", "false");
+  document.body.classList.add("panel-open");
+  loadBriefing(t.id);
+}
+
+function closePanel() {
+  selectedId = null; clearInterval(typer);
+  $("panel").classList.remove("open"); $("panel").setAttribute("aria-hidden", "true");
+  document.body.classList.remove("panel-open");
+  document.querySelectorAll(".t").forEach(el => el.classList.remove("on"));
+  paintGlobe();
+  globe.pointOfView({ lat:46, lng:10, altitude:1.75 }, 1400);
+  scheduleIdle();
+}
+
+function fmtDate(s) {
+  const d = new Date(s);
+  return isNaN(d) ? "" : d.toLocaleString("en-GB", { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" });
+}
+
+function badgeHtml(t) {
+  const link = (href, text) => href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(text)} ↗</a>` : esc(text);
+  if (t.kind === "live")
+    return `<span class="kb live">LIVE</span><span>${link(t.link, t.source || "source")}</span><span>${esc(fmtDate(t.date))}</span>`;
+  if (t.kind === "reported") {
+    const c = t.corroboration || {};
+    if (c.status === "confirmed")
+      return `<span class="kb reported">REPORTED · CONFIRMED BY LIVE NEWS</span><span>${link(c.headline.link, shortTitle(c.headline.title))}</span>`;
+    return `<span class="kb reported">REPORTED · UNVERIFIED</span><span>no matching live headline yet</span>`;
+  }
+  return `<span class="kb scenario">HYPOTHETICAL</span>`;
+}
+
+function setDelta(el, v) { el.textContent = pct(v); el.style.color = v > 0.05 ? "var(--red)" : "#e2e8f0"; }
+
+function countUp(el, target, fmt) {
+  const start = performance.now();
+  (function step(now) {
+    const p = Math.min(1, (now - start) / 900), v = target * (1 - Math.pow(1 - p, 3));
+    el.textContent = fmt(v);
+    if (p < 1) requestAnimationFrame(step);
+  })(start);
+}
+
+// draws the low-high range as an error bar on each "after" bar
+const errorBars = {
+  id:"errorBars",
+  afterDatasetsDraw(c) {
+    const { ctx } = c, y = c.scales.y, ranges = c.data.datasets[1].ranges;
+    c.getDatasetMeta(1).data.forEach((bar, n) => {
+      const top = y.getPixelForValue(100 + ranges[n].high), bottom = y.getPixelForValue(100 + ranges[n].low);
+      ctx.save(); ctx.strokeStyle = "#f8fafc"; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(bar.x, top); ctx.lineTo(bar.x, bottom);
+      ctx.moveTo(bar.x - 6, top); ctx.lineTo(bar.x + 6, top);
+      ctx.moveTo(bar.x - 6, bottom); ctx.lineTo(bar.x + 6, bottom);
+      ctx.stroke(); ctx.restore();
+    });
+  },
+};
+
+function drawChart(i) {
+  const p = i.prices;
+  const lo = Math.min(100, ...p.map(x => 100 + x.low)), hi = Math.max(100, ...p.map(x => 100 + x.high));
+  if (chart) chart.destroy();
+  chart = new Chart($("chart"), {
+    type:"bar",
+    data:{ labels:p.map(x => x.label), datasets:[
+      { label:"today", data:p.map(() => 100), backgroundColor:"rgba(148,163,184,.25)", borderRadius:3 },
+      { label:"after shock", data:p.map(x => 100 + x.central), ranges:p, borderRadius:3,
+        backgroundColor:p.map(x => x.central > 0.05 ? (i.fuel === "oil" ? "#f59e0b" : "#ef4444") : "rgba(34,211,238,.7)") },
+    ]},
+    options:{ maintainAspectRatio:false, animation:{ duration:700 },
+      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label(ctx) {
+        if (ctx.datasetIndex === 0) return "today: 100";
+        const r = p[ctx.dataIndex];
+        return `after: ${pct(r.central)} (range ${pct(r.low)} to ${pct(r.high)})`;
+      } } } },
+      scales:{ x:{ grid:{ display:false } },
+               y:{ min:Math.floor((lo - 3) / 5) * 5, max:Math.ceil((hi + 3) / 5) * 5, grid:{ color:"rgba(148,163,184,.08)" }, border:{ display:false } } } },
+    plugins:[errorBars],
+  });
+}
+
+// The server answers 202 "pending" while Gemma writes, so we poll with short requests
+// instead of one long one that a browser (Safari: ~60 s) would kill with "Load failed".
+let briefToken = 0;
+async function loadBriefing(id) {
+  clearInterval(typer);
+  const token = ++briefToken, started = Date.now(), box = $("briefText");
+  const live = () => selectedId === id && token === briefToken;
+  box.innerHTML = `<span class="spin"></span> <span style="color:var(--dim)">Gemma 4 is writing…</span>`;
+  while (live()) {
+    let r;
+    try {
+      r = await fetch(`/api/briefing?id=${encodeURIComponent(id)}`);
+    } catch (e) {
+      return briefError(id, token, `Could not reach the GridShock server (${e.message}). Check that "python server.py" is still running.`);
+    }
+    const body = await r.text();
+    let data = {};
+    try { data = JSON.parse(body); } catch (e) { /* not JSON: show the raw text below */ }
+    if (!live()) return;
+    if (r.status === 202) {
+      const secs = Math.round((Date.now() - started) / 1000);
+      if (secs > 240) return briefError(id, token, "Gemma 4 has been writing for over 4 minutes. The Gemini API is probably overloaded.");
+      box.innerHTML = `<span class="spin"></span> <span style="color:var(--dim)">Gemma 4 is writing…${secs >= 8 ? ` ${secs}s · the API is busy, retrying` : ""}</span>`;
+      await new Promise(res => setTimeout(res, 2000));
+      continue;
+    }
+    if (!r.ok) return briefError(id, token, `Error ${r.status}: ${data.detail || body.slice(0, 300) || r.statusText}`);
+    return typeOut(data.briefing, id);
+  }
+}
+
+function briefError(id, token, message) {
+  if (selectedId !== id || token !== briefToken) return;
+  $("briefText").innerHTML = `<div class="brief-err">${esc(message)}</div><button type="button" class="ghost retry">↻ Retry</button>`;
+  $("briefText").querySelector(".retry").onclick = () => loadBriefing(id);
+}
+
+function typeOut(text, id) {
+  const el = $("briefText");
+  let n = 0;
+  clearInterval(typer);
+  typer = setInterval(() => {
+    if (selectedId !== id) return clearInterval(typer);
+    n = Math.min(text.length, n + 2);
+    el.innerHTML = esc(text.slice(0, n)) + '<span class="caret"></span>';
+    if (n >= text.length) { clearInterval(typer); setTimeout(() => { if (selectedId === id) el.textContent = text; }, 2500); }
+  }, 18);
+}
+
+// ---------- power mix ----------
+async function loadMix() {
+  try {
+    const { mix, live } = await (await fetch("/api/powermix")).json();
+    $("mixLive").innerHTML = live ? `<span style="color:var(--green)">● live</span>` : "typical";
+    const keys = Object.keys(mix).filter(k => mix[k] > 0).sort((a, b) => mix[b] - mix[a]);
+    if (mixChart) mixChart.destroy();
+    mixChart = new Chart($("mixChart"), {
+      type:"doughnut",
+      data:{ labels:keys, datasets:[{ data:keys.map(k => mix[k]), backgroundColor:keys.map(k => MIX_COLORS[k] || "#475569"), borderWidth:0, spacing:1.5 }] },
+      options:{ cutout:"74%", maintainAspectRatio:false, plugins:{ legend:{ display:false } } },
+    });
+    $("mixList").innerHTML = keys.slice(0, 4).map(k =>
+      `<div><span><span class="fdot" style="background:${MIX_COLORS[k] || "#475569"}"></span>${k}</span><span>${mix[k].toFixed(0)}%</span></div>`).join("");
+  } catch (e) { $("mixLive").textContent = "offline"; }
+}
+
+// ---------- what if ----------
+let attached = null;  // { blob, url } of the image waiting to be sent
+
+// shrink big photos before upload: faster, and plenty of detail for Gemma
+function shrinkImage(file, max=1600) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+      c.toBlob(b => b ? resolve(b) : reject(new Error("Could not read image")), "image/jpeg", 0.88);
+    };
+    img.onerror = () => reject(new Error("Could not read image"));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+async function attachImage(file) {
+  if (!file || !file.type.startsWith("image/")) { $("cmdMsg").className = "mono err"; $("cmdMsg").textContent = "That isn't an image."; return; }
+  try {
+    const blob = await shrinkImage(file);
+    attached = { blob, url:URL.createObjectURL(blob) };
+    $("chipImg").src = attached.url; $("chip").classList.add("on");
+    $("whatIf").placeholder = "Optional: add context, then press Enter";
+    $("cmdMsg").className = "mono"; $("cmdMsg").textContent = "";
+    $("whatIf").focus();
+  } catch (err) { $("cmdMsg").className = "mono err"; $("cmdMsg").textContent = err.message; }
+}
+
+function clearAttachment() {
+  attached = null;
+  $("chip").classList.remove("on"); $("file").value = "";
+  $("whatIf").placeholder = "What if… a drone strike shuts Nyhamna gas plant for two weeks";
+}
+
+$("attach").onclick = () => $("file").click();
+$("file").onchange = () => attachImage($("file").files[0]);
+$("chipX").onclick = clearAttachment;
+addEventListener("paste", e => {
+  const item = [...(e.clipboardData?.items || [])].find(i => i.type.startsWith("image/"));
+  if (item) { e.preventDefault(); attachImage(item.getAsFile()); }
+});
+let dragDepth = 0;
+addEventListener("dragenter", e => { if (e.dataTransfer?.types.includes("Files")) { dragDepth++; $("drop").classList.add("on"); } });
+addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; $("drop").classList.remove("on"); } });
+addEventListener("dragover", e => e.preventDefault());
+addEventListener("drop", e => {
+  e.preventDefault(); dragDepth = 0; $("drop").classList.remove("on");
+  const file = [...(e.dataTransfer?.files || [])].find(f => f.type.startsWith("image/"));
+  if (file) attachImage(file);
+});
+
+$("cmd").onsubmit = e => {
+  e.preventDefault();
+  const typed = $("whatIf").value.trim();
+  runWhatIf(typed || (attached ? "" : $("whatIf").placeholder.replace(/^What if…\s*/, "")), attached);
+};
+
+async function loadPresets() {
+  try {
+    const presets = await (await fetch("/api/presets")).json();
+    $("presets").innerHTML = presets.map((p, n) => `<button type="button" class="pchip" data-n="${n}" title="${esc(p.text)}">${esc(p.label)}</button>`).join("");
+    document.querySelectorAll(".pchip").forEach(b => b.onclick = () => runWhatIf(presets[b.dataset.n].text, null));
+  } catch (e) { /* presets are optional */ }
+}
+
+const STAGE_TEXT = {
+  reading:"Gemma 4 is reading the scenario…",
+  reading_image:"Gemma 4 is looking at the image…",
+  modelling:"Running the impact model…",
+  checking:"Checking live news for the same event…",
+};
+const wait = ms => new Promise(res => setTimeout(res, ms));
+
+// fetch that never throws: returns { status, data } with the server's real error message
+async function getJson(url, opts) {
+  const r = await fetch(url, opts);
+  const body = await r.text();
+  let data = {};
+  try { data = JSON.parse(body); } catch (e) { data = { detail:body.slice(0, 300) || r.statusText }; }
+  return { status:r.status, ok:r.ok, data };
+}
+
+// New scenarios and images come back as 202 + job id; poll /api/job with short requests
+// so slow Gemma calls never hit a browser timeout. Cached scenarios (presets) return 200 at once.
+async function runWhatIf(text, image) {
+  const msg = $("cmdMsg"), started = Date.now();
+  const show = stage => {
+    if (stage === "queued") stage = image ? "reading_image" : "reading";
+    const secs = Math.round((Date.now() - started) / 1000);
+    msg.className = "mono";
+    msg.innerHTML = `<span class="spin"></span> ${STAGE_TEXT[stage]}${secs >= 5 ? ` <span style="color:#475569">${secs}s${secs >= 20 ? " · the Gemini API is slow right now" : ""}</span>` : ""}`;
+  };
+  document.querySelectorAll(".pchip").forEach(b => b.disabled = true);
+  $("whatIf").disabled = true;
+  show(image ? "reading_image" : "reading");
+  try {
+    let res;
+    try {
+      if (image) {
+        const form = new FormData();
+        form.append("image", image.blob, "scenario.jpg");
+        form.append("text", text);
+        res = await getJson("/api/scenario-image", { method:"POST", body:form });
+      } else {
+        res = await getJson("/api/scenario", { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify({ text }) });
+      }
+    } catch (e) {
+      throw new Error(`Could not reach the GridShock server (${e.message}). Check that "python server.py" is still running.`);
+    }
+    const fromCache = res.status === 200;
+    let misses = 0;
+    while (res.status === 202) {
+      show(res.data.stage);
+      if (Date.now() - started > 300000) throw new Error("Gemma 4 has been working for over 5 minutes. The Gemini API is probably overloaded; try again.");
+      await wait(1500);
+      try {
+        res = await getJson(`/api/job?id=${encodeURIComponent(res.data.job)}`);
+        misses = 0;
+      } catch (e) {  // tolerate a brief network blip while polling
+        if (++misses >= 3) throw new Error(`Lost contact with the GridShock server (${e.message}).`);
+      }
+    }
+    if (!res.ok) throw new Error(res.data.detail || `Error ${res.status}`);
+    const data = res.data;
+    show("modelling");
+    if (image) { data.thumb = image.url; clearAttachment(); }
+    threats = [data, ...threats.filter(t => t.id !== data.id)];
+    renderThreats();
+    select(data.id);
+    msg.className = "mono";
+    msg.textContent = `${fromCache ? "✓ cached Gemma 4 reading" : image ? "✓ Gemma 4 read the image" : "✓ Gemma 4 read the scenario"}`
+      + ` · ✓ impact model${image ? ` · ✓ live news ${data.corroboration?.status === "confirmed" ? "confirms it" : "checked"}` : ""}`
+      + ` · ${data.asset ? data.asset.name : "unmapped asset"} · risk ${data.impact.risk_score}`;
+    $("whatIf").value = "";
+  } catch (err) {
+    msg.className = "mono err"; msg.textContent = err.message;
+  } finally {
+    $("whatIf").disabled = false; $("whatIf").focus();
+    document.querySelectorAll(".pchip").forEach(b => b.disabled = false);
+    setTimeout(() => { if (!msg.classList.contains("err")) msg.textContent = ""; }, 7000);
+  }
+}
+
+// ---------- wiring ----------
+$("close").onclick = closePanel;
+$("refresh").onclick = () => loadThreats(true);
+$("demo").onchange = () => { threats = threats.filter(t => t.kind !== "live"); loadThreats(false); };
+addEventListener("keydown", e => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); $("whatIf").focus(); }
+  if (e.key === "Escape") { if (document.activeElement === $("whatIf")) $("whatIf").blur(); else if (selectedId) closePanel(); }
+});
+setInterval(() => { $("clock").textContent = new Date().toLocaleTimeString("en-GB") + " UK"; }, 1000);
+
+loadAssets().then(() => loadThreats());
+loadMix();
+loadPresets();
+setInterval(() => loadThreats(false), 10 * 60 * 1000);
+setInterval(loadMix, 10 * 60 * 1000);
+</script>
+</body>
+</html>

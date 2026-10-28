@@ -1,0 +1,28 @@
+id,name,country,fuel,bucket,uk_share_pct,capacity_gw,notes,lat,lon,global_share_pct
+norway_pipelines,Norwegian gas pipelines to UK (Langeled + Vesterled),Norway,gas,Norway,30.0,,Norway is the UK's largest gas supplier; rough share of total UK gas supply,58.6,2.4,
+nyhamna,Nyhamna gas processing plant,Norway,gas,Norway,15.0,,Feeds the Langeled pipeline to Easington,62.85,6.95,
+kollsnes,Kollsnes gas processing plant,Norway,gas,Norway,10.0,,Major Norwegian processing hub; serves UK and Europe,60.55,4.84,
+ukcs_gas,UK North Sea gas production,UK,gas,UK North Sea,32.0,,Domestic production; declining over time,57.6,1.2,
+grain_lng,Isle of Grain LNG terminal,UK,gas,LNG,10.0,,Largest LNG terminal in Europe (Kent),51.445,0.715,
+south_hook_lng,South Hook LNG terminal (Milford Haven),UK,gas,LNG,10.0,,Large LNG terminal in Wales,51.705,-5.08,
+us_lng,US LNG cargoes,USA,gas,LNG,15.0,,Largest LNG source for the UK in recent years,29.73,-93.87,
+hormuz,Strait of Hormuz shipping route,Middle East,gas,LNG,3.0,,Chokepoint for Qatari LNG and Gulf oil; also lifts global prices,26.57,56.25,20
+continent_gas,Gas interconnectors from Belgium/Netherlands (IUK + BBL),Belgium/Netherlands,gas,Continent,3.0,,Flows vary by season,52.1,2.6,
+ifa,IFA power cable (UK-France),France,power,Imports,,2.0,Undersea interconnector,50.98,1.62,
+ifa2,IFA2 power cable (UK-France),France,power,Imports,,1.0,Undersea interconnector,50.3,-1.0,
+eleclink,ElecLink (UK-France via Channel Tunnel),France,power,Imports,,1.0,Runs through the Channel Tunnel,51.09,1.18,
+nsl,North Sea Link (UK-Norway),Norway,power,Imports,,1.4,Undersea interconnector to Norwegian hydro,56.6,2.0,
+viking,Viking Link (UK-Denmark),Denmark,power,Imports,,1.4,Undersea interconnector,54.6,4.4,
+britned,BritNed (UK-Netherlands),Netherlands,power,Imports,,1.0,Undersea interconnector,51.75,2.9,
+nemo,Nemo Link (UK-Belgium),Belgium,power,Imports,,1.0,Undersea interconnector,51.33,2.05,
+sizewell_b,Sizewell B nuclear plant,UK,power,Nuclear,,1.2,Suffolk,52.215,1.62,
+heysham_2,Heysham 2 nuclear plant,UK,power,Nuclear,,1.2,Lancashire,54.03,-2.92,
+torness,Torness nuclear plant,UK,power,Nuclear,,1.2,East Lothian,55.97,-2.41,
+hornsea,Hornsea 1+2 offshore wind farms,UK,power,Wind,,2.5,Among the largest offshore wind farms in the world,53.88,1.79,
+qatar_lng,Qatari LNG cargoes,Qatar,gas,LNG,5.0,,Qatar ships LNG to UK terminals via the Strait of Hormuz,25.9,51.6,
+taiwan_strait,Taiwan Strait / South China Sea shipping lanes,Taiwan / South China Sea,gas,LNG,2.0,,Major LNG and container route; disruption tightens the global LNG market the UK buys from,24.0,119.5,
+ras_tanura,Ras Tanura oil terminal,Saudi Arabia,oil,Oil,,,One of the world's largest crude export terminals,26.64,50.16,3.0
+abqaiq,Abqaiq oil processing facility,Saudi Arabia,oil,Oil,,,Processes most Saudi crude; 2019 drone attack briefly cut ~5% of world supply,25.94,49.68,7.0
+bab_el_mandeb,Bab el-Mandeb / Red Sea route,Yemen / Djibouti,oil,Oil,2.0,,Oil and LNG route between the Gulf and Suez; Houthi attacks divert ships around Africa,12.6,43.3,5.0
+suez,Suez Canal and SUMED pipeline,Egypt,oil,Oil,2.0,,Oil and LNG route from the Gulf to Europe,30.6,32.33,6.0
+forties,Forties Pipeline System,UK,oil,Oil,,,Carries ~40% of UK North Sea oil to Cruden Bay and Grangemouth,57.42,-1.85,0.4
