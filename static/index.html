@@ -79,12 +79,32 @@
   #kinds .kb { width:96px; text-align:center; }
 
   /* briefing panel */
-  #panel { position:fixed; top:70px; right:24px; bottom:100px; width:380px; z-index:15; padding:18px 18px 16px; overflow-y:auto;
+  #panel, #assetPanel { position:fixed; top:70px; right:24px; bottom:100px; width:380px; z-index:15; padding:18px 18px 16px; overflow-y:auto;
     transform:translateX(calc(100% + 40px)); opacity:0; transition:transform .55s var(--ease), opacity .4s; }
-  #panel.open { transform:none; opacity:1; }
-  #panel::-webkit-scrollbar { width:4px; } #panel::-webkit-scrollbar-thumb { background:var(--edge); }
-  #close { position:absolute; top:12px; right:12px; background:none; border:none; color:var(--dim); font-size:18px; line-height:1; }
-  #close:hover { color:#fff; }
+  #panel.open, #assetPanel.open { transform:none; opacity:1; }
+  #panel::-webkit-scrollbar, #assetPanel::-webkit-scrollbar { width:4px; } #panel::-webkit-scrollbar-thumb, #assetPanel::-webkit-scrollbar-thumb { background:var(--edge); }
+  #assetPanel { bottom:auto; max-height:calc(100vh - 170px); }
+  .ap-title { color:#f1f5f9; font-size:17px; font-weight:600; line-height:1.3; margin:6px 24px 8px 0; }
+  .ap-tags { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; font-size:10.5px; color:#94a3b8; }
+  .ap-tags span { display:inline-flex; align-items:center; gap:5px; }
+  .ap-tags .tag { padding:2px 8px; border-radius:99px; border:1px solid var(--edge); color:#e2e8f0; }
+  .status { display:inline-flex; align-items:center; gap:7px; margin-top:14px; padding:4px 11px 4px 9px; border-radius:99px; font:600 10.5px/1.2 "JetBrains Mono",monospace; letter-spacing:.08em; }
+  .status i { width:7px; height:7px; border-radius:50%; }
+  .status.ok { color:#4ade80; background:rgba(74,222,128,.08); border:1px solid rgba(74,222,128,.35); } .status.ok i { background:#4ade80; }
+  .status.bad { color:#f87171; background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.4); } .status.bad i { background:#ef4444; animation:pulse 1.4s infinite; }
+  .ap-sec { margin-top:16px; }
+  .ap-role { margin-top:5px; color:#e2e8f0; font-size:13px; line-height:1.5; }
+  .ap-role b { color:var(--accent); font-family:"JetBrains Mono",monospace; }
+  .ap-notes { margin-top:8px; color:#94a3b8; font-size:12px; }
+  .ap-threat { display:flex; align-items:flex-start; gap:8px; width:100%; text-align:left; background:none; border:none; padding:6px 0; color:#e2e8f0; font-size:12px; line-height:1.35; border-top:1px solid var(--edge); }
+  .ap-threat:hover { color:var(--accent); }
+  .ap-threat .kb { flex:none; margin-top:1px; }
+  .cutbtn { margin-top:18px; width:100%; padding:10px 14px; border-radius:11px; font-weight:600; font-size:13px; color:#fbbf24;
+    background:rgba(251,191,36,.08); border:1px dashed rgba(251,191,36,.5); transition:background .2s, border-style .2s; }
+  .cutbtn:hover { background:rgba(251,191,36,.16); border-style:solid; }
+  .cutbtn:disabled { opacity:.6; cursor:wait; }
+  #close, #aClose { position:absolute; top:12px; right:12px; background:none; border:none; color:var(--dim); font-size:18px; line-height:1; }
+  #close:hover, #aClose:hover { color:#fff; }
   #pTitle { color:#f1f5f9; font-size:15px; font-weight:600; line-height:1.35; margin:6px 24px 6px 0; }
   #pSummary { color:#94a3b8; font-size:12px; }
   #pMeta { font-size:10px; color:var(--dim); margin-top:6px; }
@@ -180,8 +200,8 @@
     #rail { top:auto; bottom:118px; height:30vh; width:calc(100vw - 32px); left:16px; }
     #mix, #legend, #controls label, #cmdHint { display:none; }
     #brand { left:16px; } #controls { right:16px; }
-    #panel { left:16px; right:16px; width:auto; top:auto; bottom:118px; max-height:60vh; transform:translateY(calc(100% + 100px)); }
-    #panel.open { transform:none; }
+    #panel, #assetPanel { left:16px; right:16px; width:auto; top:auto; bottom:118px; max-height:60vh; transform:translateY(calc(100% + 100px)); }
+    #panel.open, #assetPanel.open { transform:none; }
   }
 </style>
 </head>
@@ -248,6 +268,21 @@
   </details>
 </aside>
 
+<aside id="assetPanel" class="glass" aria-hidden="true">
+  <button id="aClose" title="Close (Esc)">×</button>
+  <div class="label">Infrastructure</div>
+  <div id="aName" class="ap-title"></div>
+  <div id="aTags" class="ap-tags mono"></div>
+  <div id="aStatus"></div>
+  <div class="label ap-sec">Role for the UK</div>
+  <div id="aRole" class="ap-role"></div>
+  <div id="aNotes" class="ap-notes"></div>
+  <div id="aThreats"></div>
+  <button type="button" id="aCut" class="cutbtn">What if this is cut?</button>
+  <div class="disc">Runs a <span style="color:#fbbf24">HYPOTHETICAL</span> full 14-day outage through the Python model. Gemma 4 only writes the briefing.</div>
+  <div id="aMsg" class="mono" style="font-size:11px;color:var(--amber);margin-top:6px"></div>
+</aside>
+
 <div id="mix" class="glass">
   <div id="mixRing"><canvas id="mixChart"></canvas><span class="mono">GB</span></div>
   <div style="flex:1">
@@ -299,8 +334,16 @@ let assets = [], threats = [], selectedId = null, pollTimer = null, typer = null
 // arcs, points and rings are sized in degrees, so they balloon when zoomed in.
 // zoomK shrinks them with the camera so they keep roughly the same on-screen size.
 let zoomK = 1;
-const arcStroke = a => zoomK * (a.pulse ? 0.22 : a.shock ? 0.4 : thickness(a) * (a.id === selectedAsset() ? 1.4 : 1));
-const pointRadius = p => zoomK * (p.hub ? 0.32 : 0.16);
+let hoveredId = null;  // asset under the mouse
+const arcStroke = a => zoomK * (a.hit ? 1.6 : a.pulse ? 0.22 : a.shock ? 0.4
+  : thickness(a) * (a.id === hoveredId ? 2 : a.id === selectedAsset() ? 1.4 : 1));
+const pointRadius = p => zoomK * (p.hub ? 0.32 : p.id === hoveredId ? 0.3 : 0.16);
+function arcColor(a) {
+  if (a.hit) return "rgba(0,0,0,0)";  // invisible, wide hit area for easy clicking
+  if (a.shock) return ["rgba(253,230,138,.95)", "#fb923c"];
+  const c = arcStyle(a).color;
+  return a.id === hoveredId ? ["rgba(255,255,255,.95)", c[1]] : c;
+}
 const ringRadius = r => zoomK * (r.event ? 6.5 : r.selected ? 3.6 : 1.8);
 const globe = Globe()($("globe"))
   .backgroundColor("#020308")
@@ -308,22 +351,24 @@ const globe = Globe()($("globe"))
   // two kinds of arc: "flow" (asset -> Britain) and "shock" (event location -> affected asset)
   .arcStartLat(a => a.shock ? a.from.lat : a.lat).arcStartLng(a => a.shock ? a.from.lon : a.lon)
   .arcEndLat(a => a.shock ? a.to.lat : UK.lat).arcEndLng(a => a.shock ? a.to.lon : UK.lng)
-  .arcColor(a => a.shock ? ["rgba(253,230,138,.95)", "#fb923c"] : arcStyle(a).color)
+  .arcColor(arcColor)
   .arcStroke(arcStroke)
-  .arcDashLength(a => a.pulse ? 0.05 : a.shock ? 0.12 : arcStyle(a).dash)
-  .arcDashGap(a => a.pulse ? 0.3 : a.shock ? 0.06 : arcStyle(a).gap)
-  .arcDashInitialGap(a => a.shock || hitKind(a.id) ? 0 : (a.lat * 7 % 1 + 1) % 1)
-  .arcDashAnimateTime(a => a.pulse ? 1500 : a.shock ? 700 : hitKind(a.id) ? 0 : 2600 - thickness(a) * 900)  // a hit flow stops moving
+  .arcDashLength(a => a.hit ? 1 : a.pulse ? 0.05 : a.shock ? 0.12 : arcStyle(a).dash)
+  .arcDashGap(a => a.hit ? 0 : a.pulse ? 0.3 : a.shock ? 0.06 : arcStyle(a).gap)
+  .arcDashInitialGap(a => a.hit || a.shock || hitKind(a.id) ? 0 : (a.lat * 7 % 1 + 1) % 1)
+  .arcDashAnimateTime(a => a.hit ? 0 : a.pulse ? 1500 : a.shock ? 700 : hitKind(a.id) ? 0 : 2600 - thickness(a) * 900)  // a hit flow stops moving
   .arcAltitude(a => a.shock ? a.alt : flowAltitude(a))
   .arcLabel(a => a.shock ? `<b>Shockwave</b><br><span style="color:#94a3b8">${esc(a.from.name)} → ${esc(a.toName)}</span>`
-    : `<b>${esc(a.name)}</b><br><span style="color:#94a3b8">${esc(a.country)} · ${assetSize(a)}</span>`)
-  .onArcClick(a => a.shock ? null : selectByAsset(a.id))
+    : `<b>${esc(a.name)}</b><br><span style="color:#94a3b8">${esc(a.type)} · ${esc(a.country)} · ${assetSize(a)}</span><br><span style="color:#64748b">click for details</span>`)
+  .onArcClick(a => { objectClicked = true; if (!a.shock) openAsset(a.id); })
+  .onArcHover(a => setHover(a && !a.shock ? a.id : null))
   // asset + hub points
   .pointLat("lat").pointLng("lon").pointAltitude(0.0015).pointResolution(16)  // flat discs, not cylinders
   .pointRadius(pointRadius)
   .pointColor(p => p.hub ? "#f8fafc" : hitKind(p.id) ? KIND_COLOR[hitKind(p.id)] : (FUEL[p.fuel] || FUEL.gas))
-  .pointLabel(p => esc(p.name))
-  .onPointClick(p => p.hub ? null : selectByAsset(p.id))
+  .pointLabel(p => p.hub ? esc(p.name) : `<b>${esc(p.name)}</b><br><span style="color:#64748b">click for details</span>`)
+  .onPointClick(p => { objectClicked = true; if (!p.hub) openAsset(p.id); })
+  .onPointHover(p => setHover(p && !p.hub ? p.id : null))
   // pulsing threat rings
   .ringLat("lat").ringLng("lon")
   .ringColor(r => t => rgba(r.color, (1 - t) * (r.selected ? 1 : .55)))
@@ -364,7 +409,7 @@ setInterval(() => {
   const k = Math.round(Math.min(1.3, Math.max(0.1, globe.pointOfView().altitude / 1.75)) * 20) / 20;
   if (k === zoomK) return;
   zoomK = k;
-  globe.arcStroke(arcStroke).pointRadius(pointRadius).ringMaxRadius(ringRadius)
+  globe.arcStroke(a => arcStroke(a)).pointRadius(p => pointRadius(p)).ringMaxRadius(ringRadius)
     .labelSize(() => 0.85 * zoomK).labelDotRadius(() => 0.22 * zoomK);
 }, 200);
 
@@ -412,7 +457,7 @@ function angularDist(a, b) {  // degrees between two lat/lon points
 function paintGlobe() {
   computeHits();
   const sel = selectedThreat();
-  const arcs = assets.map(a => ({ ...a }));
+  const arcs = [...assets.map(a => ({ ...a })), ...assets.map(a => ({ ...a, hit:true }))];
   const rings = assets.filter(a => hitKind(a.id)).map(a =>
     ({ lat:a.lat, lon:a.lon, color:KIND_COLOR[hitKind(a.id)], selected:a.id === sel?.asset?.id }));
   const labels = [];
@@ -502,17 +547,105 @@ function renderThreats() {
       + (rows || `<div class="sec-empty">${sec.empty}</div>`);
   }).join("");
   document.querySelectorAll(".t").forEach(el => el.onclick = () => select(el.dataset.id));
+  if (assetPanelId) renderAssetStatus(assets.find(a => a.id === assetPanelId));
 }
 
 // ---------- selection ----------
-function selectByAsset(assetId) {
-  const t = threats.find(t => t.asset?.id === assetId);
-  if (t) select(t.id);
+// ---------- hover + asset panel ----------
+let objectClicked = false, downAt = null, assetPanelId = null;
+
+function setHover(id) {
+  if (id === hoveredId) return;
+  hoveredId = id;
+  $("globe").style.cursor = id ? "pointer" : "";
+  globe.renderer().domElement.style.cursor = id ? "pointer" : "";
+  globe.arcColor(a => arcColor(a)).arcStroke(a => arcStroke(a)).pointRadius(p => pointRadius(p));
 }
+
+// a click on empty globe or space (not a drag, not an arc or marker) hides the side panel
+$("globe").addEventListener("pointerdown", e => { downAt = [e.clientX, e.clientY]; objectClicked = false; });
+$("globe").addEventListener("click", e => {
+  if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
+  setTimeout(() => { if (!objectClicked) hidePanels(); }, 0);
+});
+
+function hidePanels() {
+  if (assetPanelId) closeAssetPanel();
+  if (selectedId) closePanel(false);
+}
+
+function roleHtml(a) {
+  if (a.fuel === "power") {
+    const what = a.type === "Power cable" ? "import capacity" : "generating capacity";
+    return `<b>${a.capacity_gw} GW</b> of ${what}, about <b>${(a.capacity_gw / 30 * 100).toFixed(1)}%</b> of average GB demand (30 GW).`;
+  }
+  if (a.fuel === "oil") {
+    return `<b>~${a.global_share_pct}%</b> of world oil supply. Oil is priced globally, so it reaches the UK through Brent and pump prices.`
+      + (a.uk_share_pct ? ` Also a route for <b>~${a.uk_share_pct}%</b> of UK gas (LNG).` : "");
+  }
+  return `<b>~${a.uk_share_pct}%</b> of UK gas supply.` + (a.global_share_pct ? ` About <b>${a.global_share_pct}%</b> of world oil also passes here.` : "");
+}
+
+function renderAssetStatus(a) {
+  const hits = threats.filter(t => t.asset?.id === a.id);
+  const label = { live:"LIVE", reported:"REPORTED", scenario:"HYPOTHETICAL" };
+  $("aStatus").innerHTML = hits.length
+    ? `<span class="status bad"><i></i>THREATENED</span>`
+    : `<span class="status ok"><i></i>NORMAL</span><div class="ap-notes" style="margin-top:6px">No current live, reported or scenario threats.</div>`;
+  $("aThreats").innerHTML = hits.length
+    ? `<div class="label ap-sec" style="margin-bottom:4px">Threats affecting it</div>` + hits.map(t =>
+      `<button type="button" class="ap-threat" data-id="${t.id}"><span class="kb ${t.kind}">${label[t.kind]}</span><span>${esc(shortTitle(t.title))}</span></button>`).join("")
+    : "";
+  document.querySelectorAll(".ap-threat").forEach(b => b.onclick = () => select(b.dataset.id));
+}
+
+function openAsset(id) {
+  const a = assets.find(x => x.id === id);
+  if (!a) return;
+  if (selectedId) closePanel(false);
+  assetPanelId = id;
+  $("aName").textContent = a.name;
+  $("aTags").innerHTML = `<span class="tag">${esc(a.type)}</span><span>${esc(a.country)}</span>`
+    + `<span><span class="fdot" style="background:${FUEL[a.fuel] || FUEL.gas}"></span>${esc(a.fuel)}</span>`;
+  $("aRole").innerHTML = roleHtml(a);
+  $("aNotes").textContent = a.notes || "";
+  $("aMsg").textContent = "";
+  $("aCut").disabled = false; $("aCut").textContent = "What if this is cut?";
+  renderAssetStatus(a);
+  $("assetPanel").classList.add("open"); $("assetPanel").setAttribute("aria-hidden", "false");
+  document.body.classList.add("panel-open");
+  controls.autoRotate = false; clearTimeout(idleTimer);
+  globe.pointOfView({ lat:a.lat, lng:a.lon, altitude:Math.min(1.6, Math.max(0.9, globe.pointOfView().altitude)) }, 1200);
+}
+
+function closeAssetPanel() {
+  assetPanelId = null;
+  $("assetPanel").classList.remove("open"); $("assetPanel").setAttribute("aria-hidden", "true");
+  if (!selectedId) document.body.classList.remove("panel-open");
+  scheduleIdle();
+}
+
+// "What if this is cut?": full 14-day outage, numbers from the Python model straight away
+$("aCut").onclick = async () => {
+  const id = assetPanelId;
+  $("aCut").disabled = true; $("aCut").textContent = "Running the impact model…"; $("aMsg").textContent = "";
+  try {
+    const res = await getJson("/api/asset-scenario", { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify({ asset_id:id }) });
+    if (!res.ok) throw new Error(res.data.detail || `Error ${res.status}`);
+    threats = [res.data, ...threats.filter(t => t.id !== res.data.id)];
+    renderThreats();
+    select(res.data.id);
+  } catch (e) {
+    $("aMsg").textContent = e.message.startsWith("Error") ? e.message : `Could not reach the GridShock server (${e.message}).`;
+    $("aCut").disabled = false; $("aCut").textContent = "What if this is cut?";
+  }
+};
+$("aClose").onclick = closeAssetPanel;
 
 function select(id) {
   const t = threats.find(x => x.id === id);
   if (!t) return;
+  if (assetPanelId) closeAssetPanel();
   selectedId = id;
   document.querySelectorAll(".t").forEach(el => el.classList.toggle("on", el.dataset.id === id));
   paintGlobe();
@@ -559,13 +692,13 @@ function openPanel(t) {
   loadBriefing(t.id);
 }
 
-function closePanel() {
+function closePanel(flyHome = true) {
   selectedId = null; clearInterval(typer);
   $("panel").classList.remove("open"); $("panel").setAttribute("aria-hidden", "true");
-  document.body.classList.remove("panel-open");
+  if (!assetPanelId) document.body.classList.remove("panel-open");
   document.querySelectorAll(".t").forEach(el => el.classList.remove("on"));
   paintGlobe();
-  globe.pointOfView({ lat:46, lng:10, altitude:1.75 }, 1400);
+  if (flyHome === true) globe.pointOfView({ lat:46, lng:10, altitude:1.75 }, 1400);
   scheduleIdle();
 }
 
@@ -852,12 +985,12 @@ async function runWhatIf(text, image) {
 }
 
 // ---------- wiring ----------
-$("close").onclick = closePanel;
+$("close").onclick = () => closePanel();
 $("refresh").onclick = () => loadThreats(true);
 $("demo").onchange = () => { threats = threats.filter(t => t.kind !== "live"); loadThreats(false); };
 addEventListener("keydown", e => {
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); $("whatIf").focus(); }
-  if (e.key === "Escape") { if (document.activeElement === $("whatIf")) $("whatIf").blur(); else if (selectedId) closePanel(); }
+  if (e.key === "Escape") { if (document.activeElement === $("whatIf")) $("whatIf").blur(); else if (assetPanelId) closeAssetPanel(); else if (selectedId) closePanel(); }
 });
 setInterval(() => { $("clock").textContent = new Date().toLocaleTimeString("en-GB") + " UK"; }, 1000);
 

@@ -13,29 +13,29 @@
       "event_lon": 51.6,
       "asset_id": "qatar_lng",
       "fuel": "gas",
-      "lost_fraction": 0.2,
+      "lost_fraction": 0.3,
       "duration_days": 90,
       "confidence": "medium",
       "summary": "QatarEnergy extends force majeure on LNG deliveries, potentially reducing global supply availability."
     },
     "impact": {
       "fuel": "gas",
-      "supply_loss_pct": 1.0,
+      "supply_loss_pct": 1.5,
       "supply_label": "UK gas supply lost",
-      "gas_price_change_pct": 2.6,
-      "power_price_change_pct": 1.3,
+      "gas_price_change_pct": 3.9,
+      "power_price_change_pct": 2.8,
       "brent_price_change_pct": 0.0,
       "uk_fuel_price_change_pct": 0.0,
       "ranges": {
         "gas": {
-          "low": 1.2,
-          "central": 2.6,
-          "high": 3.9
+          "low": 1.8,
+          "central": 3.9,
+          "high": 5.9
         },
         "power": {
-          "low": 0.6,
-          "central": 1.3,
-          "high": 1.9
+          "low": 1.2,
+          "central": 2.8,
+          "high": 4.1
         },
         "brent": {
           "low": 0.0,
@@ -52,43 +52,43 @@
         {
           "key": "gas",
           "label": "Gas price",
-          "low": 1.2,
-          "central": 2.6,
-          "high": 3.9
+          "low": 1.8,
+          "central": 3.9,
+          "high": 5.9
         },
         {
           "key": "power",
           "label": "Power price",
-          "low": 0.6,
-          "central": 1.3,
-          "high": 1.9
+          "low": 1.2,
+          "central": 2.8,
+          "high": 4.1
         }
       ],
       "duration_days": 90,
       "duration_factor": 1.3,
       "confidence_weight": 0.8,
-      "risk_score": 28,
-      "risk_level": "Low",
+      "risk_score": 30,
+      "risk_level": "Medium",
       "calc": [
         {
           "by": "Gemma 4",
           "label": "Extraction",
-          "formula": "Event at Qatar hits Qatari LNG cargoes \u00b7 fuel gas \u00b7 20% of flow lost \u00b7 90 days \u00b7 medium confidence"
+          "formula": "Event at Qatar hits Qatari LNG cargoes \u00b7 fuel gas \u00b7 30% of flow lost \u00b7 90 days \u00b7 medium confidence"
         },
         {
           "by": "Python",
           "label": "Supply lost",
-          "formula": "5% UK share \u00d7 20% lost = 1.0%"
+          "formula": "5% UK share \u00d7 30% lost = 1.5%"
         },
         {
           "by": "Python",
           "label": "Gas price",
-          "formula": "1.0 \u00d7 2.0 elasticity \u00d7 1.3 duration factor = +2.6% (range +1.2% to +3.9%)"
+          "formula": "1.5 \u00d7 2.0 elasticity \u00d7 1.3 duration factor = +3.9% (range +1.8% to +5.9%)"
         },
         {
           "by": "Python",
           "label": "Power price",
-          "formula": "2.6 gas move \u00d7 0.7 pass-through \u00d7 21/30 gas share of GB mix = +1.3% (range +0.6% to +1.9%)"
+          "formula": "3.9 gas move \u00d7 0.7 pass-through \u00d7 30/30 gas share of GB mix = +2.8% (range +1.2% to +4.1%)"
         },
         {
           "by": "Python",
@@ -103,7 +103,7 @@
         {
           "by": "Python",
           "label": "Risk score",
-          "formula": "(2.6 largest price move \u00d7 2 + 30 days, max 30) \u00d7 0.8 medium-confidence weight = 28 / 100"
+          "formula": "(3.9 largest price move \u00d7 2 + 30 days, max 30) \u00d7 0.8 medium-confidence weight = 30 / 100"
         }
       ],
       "disclaimer": "Indicative estimate. Stated assumptions, not a market forecast."
@@ -113,6 +113,7 @@
       "name": "Qatari LNG cargoes",
       "country": "Qatar",
       "fuel": "gas",
+      "type": "LNG supply",
       "bucket": "LNG",
       "uk_share_pct": 5.0,
       "capacity_gw": null,
@@ -135,35 +136,35 @@
     "source": "Google News",
     "date": "Wed, 28 Oct 2026 13:30:00 GMT",
     "shock": {
-      "i": 2,
+      "i": 3,
       "event_location": "Qatar",
       "event_lat": 25.9,
       "event_lon": 51.6,
       "asset_id": "qatar_lng",
       "fuel": "gas",
-      "lost_fraction": 0.2,
+      "lost_fraction": 0.3,
       "duration_days": 90,
       "confidence": "medium",
       "summary": "QatarEnergy extends LNG force majeure through the end of 2026."
     },
     "impact": {
       "fuel": "gas",
-      "supply_loss_pct": 1.0,
+      "supply_loss_pct": 1.5,
       "supply_label": "UK gas supply lost",
-      "gas_price_change_pct": 2.6,
-      "power_price_change_pct": 1.3,
+      "gas_price_change_pct": 3.9,
+      "power_price_change_pct": 2.8,
       "brent_price_change_pct": 0.0,
       "uk_fuel_price_change_pct": 0.0,
       "ranges": {
         "gas": {
-          "low": 1.2,
-          "central": 2.6,
-          "high": 3.9
+          "low": 1.8,
+          "central": 3.9,
+          "high": 5.9
         },
         "power": {
-          "low": 0.6,
-          "central": 1.3,
-          "high": 1.9
+          "low": 1.2,
+          "central": 2.8,
+          "high": 4.1
         },
         "brent": {
           "low": 0.0,
@@ -180,43 +181,43 @@
         {
           "key": "gas",
           "label": "Gas price",
-          "low": 1.2,
-          "central": 2.6,
-          "high": 3.9
+          "low": 1.8,
+          "central": 3.9,
+          "high": 5.9
         },
         {
           "key": "power",
           "label": "Power price",
-          "low": 0.6,
-          "central": 1.3,
-          "high": 1.9
+          "low": 1.2,
+          "central": 2.8,
+          "high": 4.1
         }
       ],
       "duration_days": 90,
       "duration_factor": 1.3,
       "confidence_weight": 0.8,
-      "risk_score": 28,
-      "risk_level": "Low",
+      "risk_score": 30,
+      "risk_level": "Medium",
       "calc": [
         {
           "by": "Gemma 4",
           "label": "Extraction",
-          "formula": "Event at Qatar hits Qatari LNG cargoes \u00b7 fuel gas \u00b7 20% of flow lost \u00b7 90 days \u00b7 medium confidence"
+          "formula": "Event at Qatar hits Qatari LNG cargoes \u00b7 fuel gas \u00b7 30% of flow lost \u00b7 90 days \u00b7 medium confidence"
         },
         {
           "by": "Python",
           "label": "Supply lost",
-          "formula": "5% UK share \u00d7 20% lost = 1.0%"
+          "formula": "5% UK share \u00d7 30% lost = 1.5%"
         },
         {
           "by": "Python",
           "label": "Gas price",
-          "formula": "1.0 \u00d7 2.0 elasticity \u00d7 1.3 duration factor = +2.6% (range +1.2% to +3.9%)"
+          "formula": "1.5 \u00d7 2.0 elasticity \u00d7 1.3 duration factor = +3.9% (range +1.8% to +5.9%)"
         },
         {
           "by": "Python",
           "label": "Power price",
-          "formula": "2.6 gas move \u00d7 0.7 pass-through \u00d7 21/30 gas share of GB mix = +1.3% (range +0.6% to +1.9%)"
+          "formula": "3.9 gas move \u00d7 0.7 pass-through \u00d7 30/30 gas share of GB mix = +2.8% (range +1.2% to +4.1%)"
         },
         {
           "by": "Python",
@@ -231,7 +232,7 @@
         {
           "by": "Python",
           "label": "Risk score",
-          "formula": "(2.6 largest price move \u00d7 2 + 30 days, max 30) \u00d7 0.8 medium-confidence weight = 28 / 100"
+          "formula": "(3.9 largest price move \u00d7 2 + 30 days, max 30) \u00d7 0.8 medium-confidence weight = 30 / 100"
         }
       ],
       "disclaimer": "Indicative estimate. Stated assumptions, not a market forecast."
@@ -241,6 +242,7 @@
       "name": "Qatari LNG cargoes",
       "country": "Qatar",
       "fuel": "gas",
+      "type": "LNG supply",
       "bucket": "LNG",
       "uk_share_pct": 5.0,
       "capacity_gw": null,
@@ -263,25 +265,25 @@
     "source": "Google News",
     "date": "Wed, 28 Oct 2026 13:24:25 GMT",
     "shock": {
-      "i": 5,
+      "i": 6,
       "event_location": "Saudi Arabia",
       "event_lat": 25.94,
       "event_lon": 49.68,
       "asset_id": "abqaiq",
       "fuel": "oil",
-      "lost_fraction": 0.1,
+      "lost_fraction": 0.2,
       "duration_days": 14.0,
       "confidence": "medium",
       "summary": "Reports of an attack on a Saudi Arabian refinery causing supply concerns."
     },
     "impact": {
       "fuel": "oil",
-      "supply_loss_pct": 0.7,
+      "supply_loss_pct": 1.4,
       "supply_label": "World oil supply lost",
       "gas_price_change_pct": 0.0,
       "power_price_change_pct": 0.0,
-      "brent_price_change_pct": 2.1,
-      "uk_fuel_price_change_pct": 0.8,
+      "brent_price_change_pct": 4.2,
+      "uk_fuel_price_change_pct": 1.7,
       "ranges": {
         "gas": {
           "low": 0.0,
@@ -294,57 +296,57 @@
           "high": 0.0
         },
         "brent": {
-          "low": 0.9,
-          "central": 2.1,
-          "high": 3.2
+          "low": 1.9,
+          "central": 4.2,
+          "high": 6.3
         },
         "uk_fuel": {
-          "low": 0.4,
-          "central": 0.8,
-          "high": 1.3
+          "low": 0.8,
+          "central": 1.7,
+          "high": 2.5
         }
       },
       "prices": [
         {
           "key": "brent",
           "label": "Brent crude",
-          "low": 0.9,
-          "central": 2.1,
-          "high": 3.2
+          "low": 1.9,
+          "central": 4.2,
+          "high": 6.3
         },
         {
           "key": "uk_fuel",
           "label": "UK fuel",
-          "low": 0.4,
-          "central": 0.8,
-          "high": 1.3
+          "low": 0.8,
+          "central": 1.7,
+          "high": 2.5
         }
       ],
       "duration_days": 14.0,
       "duration_factor": 1.0,
       "confidence_weight": 0.8,
-      "risk_score": 15,
+      "risk_score": 18,
       "risk_level": "Low",
       "calc": [
         {
           "by": "Gemma 4",
           "label": "Extraction",
-          "formula": "Event at Saudi Arabia hits Abqaiq oil processing facility \u00b7 fuel oil \u00b7 10% of flow lost \u00b7 14 days \u00b7 medium confidence"
+          "formula": "Event at Saudi Arabia hits Abqaiq oil processing facility \u00b7 fuel oil \u00b7 20% of flow lost \u00b7 14 days \u00b7 medium confidence"
         },
         {
           "by": "Python",
           "label": "World supply lost",
-          "formula": "7% of world oil \u00d7 10% lost = 0.70%"
+          "formula": "7% of world oil \u00d7 20% lost = 1.40%"
         },
         {
           "by": "Python",
           "label": "Brent",
-          "formula": "0.70 \u00d7 3.0 elasticity \u00d7 1.0 duration factor = +2.1% (range +0.9% to +3.2%)"
+          "formula": "1.40 \u00d7 3.0 elasticity \u00d7 1.0 duration factor = +4.2% (range +1.9% to +6.3%)"
         },
         {
           "by": "Python",
           "label": "UK fuel",
-          "formula": "2.1 Brent move \u00d7 0.4 pump pass-through = +0.8% (range +0.4% to +1.3%)"
+          "formula": "4.2 Brent move \u00d7 0.4 pump pass-through = +1.7% (range +0.8% to +2.5%)"
         },
         {
           "by": "Python",
@@ -359,7 +361,7 @@
         {
           "by": "Python",
           "label": "Risk score",
-          "formula": "(2.1 largest price move \u00d7 2 + 14 days, max 30) \u00d7 0.8 medium-confidence weight = 15 / 100"
+          "formula": "(4.2 largest price move \u00d7 2 + 14 days, max 30) \u00d7 0.8 medium-confidence weight = 18 / 100"
         }
       ],
       "disclaimer": "Indicative estimate. Stated assumptions, not a market forecast."
@@ -369,6 +371,7 @@
       "name": "Abqaiq oil processing facility",
       "country": "Saudi Arabia",
       "fuel": "oil",
+      "type": "Oil processing plant",
       "bucket": "Oil",
       "uk_share_pct": null,
       "capacity_gw": null,
@@ -393,9 +396,9 @@
     "shock": {
       "i": 13,
       "event_location": "Saudi Arabia",
-      "event_lat": 25.94,
-      "event_lon": 49.68,
-      "asset_id": "abqaiq",
+      "event_lat": 26.64,
+      "event_lon": 50.16,
+      "asset_id": "ras_tanura",
       "fuel": "oil",
       "lost_fraction": 0.1,
       "duration_days": 30.0,
@@ -404,12 +407,12 @@
     },
     "impact": {
       "fuel": "oil",
-      "supply_loss_pct": 0.7,
+      "supply_loss_pct": 0.3,
       "supply_label": "World oil supply lost",
       "gas_price_change_pct": 0.0,
       "power_price_change_pct": 0.0,
-      "brent_price_change_pct": 2.7,
-      "uk_fuel_price_change_pct": 1.1,
+      "brent_price_change_pct": 1.2,
+      "uk_fuel_price_change_pct": 0.5,
       "ranges": {
         "gas": {
           "low": 0.0,
@@ -422,57 +425,57 @@
           "high": 0.0
         },
         "brent": {
-          "low": 1.2,
-          "central": 2.7,
-          "high": 4.1
+          "low": 0.5,
+          "central": 1.2,
+          "high": 1.8
         },
         "uk_fuel": {
-          "low": 0.5,
-          "central": 1.1,
-          "high": 1.6
+          "low": 0.2,
+          "central": 0.5,
+          "high": 0.7
         }
       },
       "prices": [
         {
           "key": "brent",
           "label": "Brent crude",
-          "low": 1.2,
-          "central": 2.7,
-          "high": 4.1
+          "low": 0.5,
+          "central": 1.2,
+          "high": 1.8
         },
         {
           "key": "uk_fuel",
           "label": "UK fuel",
-          "low": 0.5,
-          "central": 1.1,
-          "high": 1.6
+          "low": 0.2,
+          "central": 0.5,
+          "high": 0.7
         }
       ],
       "duration_days": 30.0,
       "duration_factor": 1.3,
       "confidence_weight": 0.8,
-      "risk_score": 28,
+      "risk_score": 26,
       "risk_level": "Low",
       "calc": [
         {
           "by": "Gemma 4",
           "label": "Extraction",
-          "formula": "Event at Saudi Arabia hits Abqaiq oil processing facility \u00b7 fuel oil \u00b7 10% of flow lost \u00b7 30 days \u00b7 medium confidence"
+          "formula": "Event at Saudi Arabia hits Ras Tanura oil terminal \u00b7 fuel oil \u00b7 10% of flow lost \u00b7 30 days \u00b7 medium confidence"
         },
         {
           "by": "Python",
           "label": "World supply lost",
-          "formula": "7% of world oil \u00d7 10% lost = 0.70%"
+          "formula": "3% of world oil \u00d7 10% lost = 0.30%"
         },
         {
           "by": "Python",
           "label": "Brent",
-          "formula": "0.70 \u00d7 3.0 elasticity \u00d7 1.3 duration factor = +2.7% (range +1.2% to +4.1%)"
+          "formula": "0.30 \u00d7 3.0 elasticity \u00d7 1.3 duration factor = +1.2% (range +0.5% to +1.8%)"
         },
         {
           "by": "Python",
           "label": "UK fuel",
-          "formula": "2.7 Brent move \u00d7 0.4 pump pass-through = +1.1% (range +0.5% to +1.6%)"
+          "formula": "1.2 Brent move \u00d7 0.4 pump pass-through = +0.5% (range +0.2% to +0.7%)"
         },
         {
           "by": "Python",
@@ -487,28 +490,29 @@
         {
           "by": "Python",
           "label": "Risk score",
-          "formula": "(2.7 largest price move \u00d7 2 + 30 days, max 30) \u00d7 0.8 medium-confidence weight = 28 / 100"
+          "formula": "(1.2 largest price move \u00d7 2 + 30 days, max 30) \u00d7 0.8 medium-confidence weight = 26 / 100"
         }
       ],
       "disclaimer": "Indicative estimate. Stated assumptions, not a market forecast."
     },
     "asset": {
-      "id": "abqaiq",
-      "name": "Abqaiq oil processing facility",
+      "id": "ras_tanura",
+      "name": "Ras Tanura oil terminal",
       "country": "Saudi Arabia",
       "fuel": "oil",
+      "type": "Oil terminal",
       "bucket": "Oil",
       "uk_share_pct": null,
       "capacity_gw": null,
-      "notes": "Processes most Saudi crude; 2019 drone attack briefly cut ~5% of world supply",
-      "lat": 25.94,
-      "lon": 49.68,
-      "global_share_pct": 7.0
+      "notes": "One of the world's largest crude export terminals",
+      "lat": 26.64,
+      "lon": 50.16,
+      "global_share_pct": 3.0
     },
     "event": {
       "name": "Saudi Arabia",
-      "lat": 25.94,
-      "lon": 49.68
+      "lat": 26.64,
+      "lon": 50.16
     }
   },
   {
@@ -519,14 +523,14 @@
     "source": "Google News",
     "date": "Wed, 28 Oct 2026 10:34:19 GMT",
     "shock": {
-      "i": 16,
+      "i": 17,
       "event_location": "Qatar",
       "event_lat": 25.9,
       "event_lon": 51.6,
       "asset_id": "qatar_lng",
       "fuel": "gas",
       "lost_fraction": 0.2,
-      "duration_days": 90,
+      "duration_days": 30.0,
       "confidence": "medium",
       "summary": "QatarEnergy suspends LNG deliveries to specific regions through the end of the year."
     },
@@ -535,7 +539,7 @@
       "supply_loss_pct": 1.0,
       "supply_label": "UK gas supply lost",
       "gas_price_change_pct": 2.6,
-      "power_price_change_pct": 1.3,
+      "power_price_change_pct": 1.8,
       "brent_price_change_pct": 0.0,
       "uk_fuel_price_change_pct": 0.0,
       "ranges": {
@@ -545,9 +549,9 @@
           "high": 3.9
         },
         "power": {
-          "low": 0.6,
-          "central": 1.3,
-          "high": 1.9
+          "low": 0.8,
+          "central": 1.8,
+          "high": 2.8
         },
         "brent": {
           "low": 0.0,
@@ -571,12 +575,12 @@
         {
           "key": "power",
           "label": "Power price",
-          "low": 0.6,
-          "central": 1.3,
-          "high": 1.9
+          "low": 0.8,
+          "central": 1.8,
+          "high": 2.8
         }
       ],
-      "duration_days": 90,
+      "duration_days": 30.0,
       "duration_factor": 1.3,
       "confidence_weight": 0.8,
       "risk_score": 28,
@@ -585,7 +589,7 @@
         {
           "by": "Gemma 4",
           "label": "Extraction",
-          "formula": "Event at Qatar hits Qatari LNG cargoes \u00b7 fuel gas \u00b7 20% of flow lost \u00b7 90 days \u00b7 medium confidence"
+          "formula": "Event at Qatar hits Qatari LNG cargoes \u00b7 fuel gas \u00b7 20% of flow lost \u00b7 30 days \u00b7 medium confidence"
         },
         {
           "by": "Python",
@@ -600,12 +604,12 @@
         {
           "by": "Python",
           "label": "Power price",
-          "formula": "2.6 gas move \u00d7 0.7 pass-through \u00d7 21/30 gas share of GB mix = +1.3% (range +0.6% to +1.9%)"
+          "formula": "2.6 gas move \u00d7 0.7 pass-through \u00d7 30/30 gas share of GB mix = +1.8% (range +0.8% to +2.8%)"
         },
         {
           "by": "Python",
           "label": "Duration factor",
-          "formula": "90 days \u2192 1.3 (under 2 days 0.5 \u00b7 2\u201314 days 1.0 \u00b7 over 14 days 1.3)"
+          "formula": "30 days \u2192 1.3 (under 2 days 0.5 \u00b7 2\u201314 days 1.0 \u00b7 over 14 days 1.3)"
         },
         {
           "by": "Python",
@@ -625,6 +629,7 @@
       "name": "Qatari LNG cargoes",
       "country": "Qatar",
       "fuel": "gas",
+      "type": "LNG supply",
       "bucket": "LNG",
       "uk_share_pct": 5.0,
       "capacity_gw": null,
@@ -647,25 +652,25 @@
     "source": "Google News",
     "date": "Wed, 28 Oct 2026 01:49:00 GMT",
     "shock": {
-      "i": 17,
+      "i": 18,
       "event_location": "Saudi Arabia",
       "event_lat": 25.94,
       "event_lon": 49.68,
       "asset_id": "abqaiq",
       "fuel": "oil",
-      "lost_fraction": 0.1,
+      "lost_fraction": 0.2,
       "duration_days": 14.0,
       "confidence": "medium",
       "summary": "Saudi Arabian refinery attack reignites global oil supply concerns."
     },
     "impact": {
       "fuel": "oil",
-      "supply_loss_pct": 0.7,
+      "supply_loss_pct": 1.4,
       "supply_label": "World oil supply lost",
       "gas_price_change_pct": 0.0,
       "power_price_change_pct": 0.0,
-      "brent_price_change_pct": 2.1,
-      "uk_fuel_price_change_pct": 0.8,
+      "brent_price_change_pct": 4.2,
+      "uk_fuel_price_change_pct": 1.7,
       "ranges": {
         "gas": {
           "low": 0.0,
@@ -678,57 +683,57 @@
           "high": 0.0
         },
         "brent": {
-          "low": 0.9,
-          "central": 2.1,
-          "high": 3.2
+          "low": 1.9,
+          "central": 4.2,
+          "high": 6.3
         },
         "uk_fuel": {
-          "low": 0.4,
-          "central": 0.8,
-          "high": 1.3
+          "low": 0.8,
+          "central": 1.7,
+          "high": 2.5
         }
       },
       "prices": [
         {
           "key": "brent",
           "label": "Brent crude",
-          "low": 0.9,
-          "central": 2.1,
-          "high": 3.2
+          "low": 1.9,
+          "central": 4.2,
+          "high": 6.3
         },
         {
           "key": "uk_fuel",
           "label": "UK fuel",
-          "low": 0.4,
-          "central": 0.8,
-          "high": 1.3
+          "low": 0.8,
+          "central": 1.7,
+          "high": 2.5
         }
       ],
       "duration_days": 14.0,
       "duration_factor": 1.0,
       "confidence_weight": 0.8,
-      "risk_score": 15,
+      "risk_score": 18,
       "risk_level": "Low",
       "calc": [
         {
           "by": "Gemma 4",
           "label": "Extraction",
-          "formula": "Event at Saudi Arabia hits Abqaiq oil processing facility \u00b7 fuel oil \u00b7 10% of flow lost \u00b7 14 days \u00b7 medium confidence"
+          "formula": "Event at Saudi Arabia hits Abqaiq oil processing facility \u00b7 fuel oil \u00b7 20% of flow lost \u00b7 14 days \u00b7 medium confidence"
         },
         {
           "by": "Python",
           "label": "World supply lost",
-          "formula": "7% of world oil \u00d7 10% lost = 0.70%"
+          "formula": "7% of world oil \u00d7 20% lost = 1.40%"
         },
         {
           "by": "Python",
           "label": "Brent",
-          "formula": "0.70 \u00d7 3.0 elasticity \u00d7 1.0 duration factor = +2.1% (range +0.9% to +3.2%)"
+          "formula": "1.40 \u00d7 3.0 elasticity \u00d7 1.0 duration factor = +4.2% (range +1.9% to +6.3%)"
         },
         {
           "by": "Python",
           "label": "UK fuel",
-          "formula": "2.1 Brent move \u00d7 0.4 pump pass-through = +0.8% (range +0.4% to +1.3%)"
+          "formula": "4.2 Brent move \u00d7 0.4 pump pass-through = +1.7% (range +0.8% to +2.5%)"
         },
         {
           "by": "Python",
@@ -743,7 +748,7 @@
         {
           "by": "Python",
           "label": "Risk score",
-          "formula": "(2.1 largest price move \u00d7 2 + 14 days, max 30) \u00d7 0.8 medium-confidence weight = 15 / 100"
+          "formula": "(4.2 largest price move \u00d7 2 + 14 days, max 30) \u00d7 0.8 medium-confidence weight = 18 / 100"
         }
       ],
       "disclaimer": "Indicative estimate. Stated assumptions, not a market forecast."
@@ -753,6 +758,7 @@
       "name": "Abqaiq oil processing facility",
       "country": "Saudi Arabia",
       "fuel": "oil",
+      "type": "Oil processing plant",
       "bucket": "Oil",
       "uk_share_pct": null,
       "capacity_gw": null,

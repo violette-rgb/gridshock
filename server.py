@@ -248,7 +248,9 @@ def _brief_job(id, t):
 
 
 def _restore_scenario(id):
-    """Scenario ids are derived from their text, so they can be rebuilt from the saved cache after a restart."""
+    """Scenario ids are derived from their text (or asset), so they can be rebuilt after a restart."""
+    if id.startswith("cut-"):
+        return cut_scenario(id[4:])
     if not id.startswith("scn-"):
         return None
     for key in list(_scenarios):
@@ -302,6 +304,32 @@ def run_scenario(text, stage=lambda s: None):
     t = build_threat({"title": text, "source": "What-if scenario"}, shock, "scenario",
                      "scn-" + hashlib.md5(key.encode()).hexdigest()[:10])
     _threats_by_id[t["id"]] = t
+    return t
+
+
+CUT_DAYS = 14
+
+
+def cut_scenario(asset_id):
+    """'What if this is cut?': a full 14-day outage of one asset. Pure Python, no Gemma call;
+    the numbers come straight from the model with lost_fraction 1.0."""
+    a = asset_info(asset_id)
+    if not a:
+        return None
+    shock = {"event_location": a["name"], "event_lat": a["lat"], "event_lon": a["lon"],
+             "asset_id": asset_id, "fuel": a["fuel"], "lost_fraction": 1.0, "duration_days": CUT_DAYS,
+             "confidence": "high", "summary": f"Hypothetical: {a['name']} is completely cut for {CUT_DAYS} days."}
+    t = build_threat({"title": f"What if {a['name']} is cut for {CUT_DAYS} days?", "source": "What-if scenario"},
+                     shock, "scenario", f"cut-{asset_id}")
+    _threats_by_id[t["id"]] = t
+    return t
+
+
+@app.post("/api/asset-scenario")
+def asset_scenario(body: dict):
+    t = cut_scenario(str(body.get("asset_id", "")))
+    if not t:
+        raise HTTPException(404, "Unknown asset")
     return t
 
 
