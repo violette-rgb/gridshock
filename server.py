@@ -39,7 +39,7 @@ PRESETS = [
     {"label": "Nyhamna drone strike", "text": "Drone strike shuts Nyhamna gas plant in Norway for two weeks"},
     {"label": "IFA cable cut", "text": "Ship anchor cuts the IFA power cable to France for a month"},
     {"label": "Taiwan Strait blockade", "text": "China blockades the Taiwan Strait for 30 days"},
-    {"label": "Ras Tanura strike", "text": "Houthi missiles hit Saudi Arabia's Ras Tanura oil terminal"},
+    {"label": "Sizewell B cyberattack", "text": "Cyberattack takes Sizewell B nuclear plant offline for 10 days"},
 ]
 
 
@@ -274,7 +274,8 @@ def get_briefing(t):
     key = _briefing_key(t)
     if key not in _briefings:
         _briefings[key] = gemma.write_briefing(t["title"], t["shock"], t["impact"], event_type(t))
-        SAVED_BRIEFINGS.write_text(json.dumps(_briefings, indent=2))
+        if t["kind"] != "reported":  # image reports are always analysed fresh, never saved for reuse
+            SAVED_BRIEFINGS.write_text(json.dumps({k: v for k, v in _briefings.items() if not k.startswith("rep-")}, indent=2))
     return _briefings[key]
 
 
@@ -446,8 +447,9 @@ def image_job(data, mime, text, stage):
     shock = {k: seen.get(k) for k in ("event_location", "event_lat", "event_lon", "asset_id", "fuel",
                                        "lost_fraction", "duration_days", "confidence", "summary")}
     shock["seen"] = description  # lets the briefing refer to what was in the image
-    t = build_threat({"title": text or shock.get("summary") or description, "source": "Uploaded image"}, shock,
-                     "reported", "rep-" + hashlib.md5(data + text.encode()).hexdigest()[:10])
+    # the typed text is context (often a single keyword), so Gemma's summary makes the better title
+    t = build_threat({"title": shock.get("summary") or text or description, "source": "Uploaded image"}, shock,
+                     "reported", "rep-" + uuid.uuid4().hex[:10])
     t["vision"] = {"description": description}
     stage("checking")
     t["corroboration"] = corroborate(t)

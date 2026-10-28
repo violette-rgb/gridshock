@@ -35,18 +35,6 @@
     "confidence": "medium",
     "summary": "A blockade of the Taiwan Strait disrupts global maritime trade routes, potentially delaying LNG shipments and increasing global energy price volatility."
   },
-  "houthi missiles hit saudi arabia's ras tanura oil terminal": {
-    "relevant": true,
-    "event_location": "Ras Tanura, Saudi Arabia",
-    "event_lat": 26.64,
-    "event_lon": 50.16,
-    "asset_id": "ras_tanura",
-    "fuel": "oil",
-    "lost_fraction": 0.5,
-    "duration_days": 30,
-    "confidence": "medium",
-    "summary": "A missile strike on the Ras Tanura terminal causes a significant disruption to global oil supplies, driving up energy prices in Great Britain."
-  },
   "drone attack on langeled": {
     "relevant": true,
     "event_location": "Langeled Pipeline, Norway",
@@ -58,5 +46,17 @@
     "duration_days": 30,
     "confidence": "medium",
     "summary": "Drone attack causes a complete shutdown of the Langeled gas pipeline, severely reducing Norwegian gas imports to Great Britain."
+  },
+  "cyberattack takes sizewell b nuclear plant offline for 10 days": {
+    "relevant": true,
+    "event_location": "Sizewell B, UK",
+    "event_lat": 52.22,
+    "event_lon": 1.62,
+    "asset_id": "sizewell_b",
+    "fuel": "power",
+    "lost_fraction": 1.0,
+    "duration_days": 10,
+    "confidence": "high",
+    "summary": "A cyberattack causes a total loss of generation at the Sizewell B nuclear power plant for 10 days."
   }
 }

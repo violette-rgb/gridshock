@@ -98,10 +98,14 @@ It is a prototype to speed up analysts, not replace them.
 ## Demo presets and offline mode
 
 The 4 preset chips under the "What if…" bar ("Nyhamna drone strike", "IFA
-cable cut", "Taiwan Strait blockade", "Ras Tanura strike") are run once in the
-background when the server starts. Gemma's extraction is cached in
+cable cut", "Taiwan Strait blockade", "Sizewell B cyberattack") are run once in
+the background when the server starts. Gemma's extraction is cached in
 `saved_scenarios.json` and briefings in `saved_briefings.json`, so presets are
 instant, repeatable and work offline.
+
+Uploaded images are never cached: every upload is analysed fresh by Gemma 4
+(together with any typed text, even a single keyword) and checked against the
+current live headlines.
 
 Every live run also saves its headlines (`saved_headlines.json`) and Gemma's
 analysis (`saved_threats.json`). Tick **demo** in the header to replay them with

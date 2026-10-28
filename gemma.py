@@ -148,7 +148,7 @@ def analyse_image(image_bytes, mime_type, text, assets_df):
     {"description", "relevant", ...shock fields}."""
     prompt = f"""You are an energy security analyst for Great Britain. Look at this image
 (a photo, satellite image, map, chart or news screenshot).
-{f'The user adds: "{text}"' if text else ""}
+{f'The user adds this context: "{text}". It may be a single keyword (who, where or what). Combine it with what you see in the image, but do not invent details that neither supports.' if text else ""}
 
 Known infrastructure assets:
 {_asset_list(assets_df)}
